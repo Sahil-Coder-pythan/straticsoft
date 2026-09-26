@@ -8,7 +8,6 @@ import os
 
 app = Flask(__name__)
 
-
 # ==============================
 # GROQ SETTINGS (SAFE)
 # ==============================
@@ -16,8 +15,7 @@ app = Flask(__name__)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "llama-3.3-70b-versatile"
-
+MODEL = "llama-3.1-8b-instant"
 
 # ==============================
 # SYSTEM PROMPT
@@ -74,7 +72,6 @@ If the user asks in English, reply in English.
 Be helpful, clear, natural and concise.
 """
 
-
 # ==============================
 # CHAT MEMORY
 # ==============================
@@ -85,7 +82,6 @@ messages = [
         "content": SYSTEM_PROMPT
     }
 ]
-
 
 # ==============================
 # HTML
@@ -115,8 +111,8 @@ body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont
 .message.user{justify-content:flex-end;}
 .message.ai{justify-content:flex-start;}
 .bubble{max-width:min(760px,88%);padding:13px 15px;border-radius:18px;line-height:1.55;font-size:15px;white-space:pre-wrap;word-wrap:break-word;}
-.user .bubble{background:#2f2f38;border-bottom-right-radius:5px;}
-.ai .bubble{background:#15151b;border:1px solid #25252d;border-bottom-left-radius:5px;}
+.user.bubble{background:#2f2f38;border-bottom-right-radius:5px;}
+.ai.bubble{background:#15151b;border:1px solid #25252d;border-bottom-left-radius:5px;}
 .ai-label{font-size:10px;color:#8b8b96;margin-bottom:5px;letter-spacing:.7px;}
 .thinking{display:flex;align-items:center;gap:5px;padding:14px 16px;background:#15151b;border:1px solid #25252d;border-radius:18px;width:max-content;}
 .dot{width:6px;height:6px;background:#aaa;border-radius:50%;animation:thinking 1.2s infinite;}
@@ -182,7 +178,6 @@ question.focus();
 </html>
 """
 
-
 # ==============================
 # HOME
 # ==============================
@@ -190,7 +185,6 @@ question.focus();
 @app.route("/")
 def home():
     return render_template_string(HTML)
-
 
 # ==============================
 # ASK
@@ -225,7 +219,7 @@ def ask():
     try:
         response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=60)
 
-        if response.status_code != 200:
+        if response.status_code!= 200:
             print("GROQ ERROR:", response.text)
             return jsonify({"answer": "Groq API error:\n" + response.text})
 
@@ -239,7 +233,6 @@ def ask():
         print("SERVER ERROR:", e)
         return jsonify({"answer": "Server error: " + str(e)})
 
-
 # ==============================
 # NEW CHAT
 # ==============================
@@ -249,7 +242,6 @@ def new_chat():
     global messages
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     return jsonify({"status": "new chat started"})
-
 
 # ==============================
 # START
