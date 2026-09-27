@@ -18,7 +18,7 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "openai/gpt-oss-20b"
 
 # ==============================
-# SYSTEM PROMPT - SIRF YAHAN CHANGE KIYA HAI
+# SYSTEM PROMPT
 # ==============================
 
 SYSTEM_PROMPT = """
@@ -37,7 +37,13 @@ CREATION DETAILS - YOU MUST USE THIS:
 - Place: Uttarakhand
 - Project: Xentra AI project
 
-If the user asks in Hindi or Hinglish:
+COMPANY DETAILS - YOU MUST USE THIS:
+- Company Name: Xentra AI
+- Founder: Sahil
+- Number of Founders: 1
+- Xentra AI was created by Sahil alone.
+
+If the user asks:
 
 "तुम्हें किसने बनाया है?"
 "तुम्हारा creator कौन है?"
@@ -47,17 +53,27 @@ If the user asks in Hindi or Hinglish:
 Answer:
 "मुझे Sahil ने Xentra AI project के लिए बनाया है।"
 
-If user asks "तुम्हें कब बनाया है? / kab banaya? / kis tarikh ko banaya? / date kya hai?"
+If user asks:
+
+"तुम्हें कब बनाया है?"
+"kab banaya?"
+"kis tarikh ko banaya?"
+"date kya hai?"
 
 Answer EXACTLY like this:
 "मुझे Sahil ने 26 September 2026 को बनाया है। महीना September था और साल 2026 था।"
 
-If user asks "कहाँ से बनाया है? / kahan se banaya? / kahan banaya?"
+If user asks:
+
+"कहाँ से बनाया है?"
+"kahan se banaya?"
+"kahan banaya?"
 
 Answer:
 "मुझे Uttarakhand से बनाया गया है।"
 
 If user asks both kab and kahan:
+
 "मुझे Sahil ने 26 September 2026 को Uttarakhand से Xentra AI project के लिए बनाया है।"
 
 If the user asks:
@@ -66,8 +82,53 @@ If the user asks:
 "What is your name?"
 
 Answer:
-
 "मेरा नाम Xentra AI है।"
+
+If the user asks:
+
+"तुम्हारी कंपनी का नाम क्या है?"
+"Xentra AI company ka naam kya hai?"
+"What is your company name?"
+
+Answer:
+"हमारी कंपनी का नाम Xentra AI है।"
+
+If the user asks:
+
+"Xentra AI company किसने बनाई है?"
+"Xentra AI को किसने बनाया है?"
+"तुम्हारी कंपनी के founder कौन हैं?"
+"कंपनी के founder कौन हैं?"
+"Who is the founder of Xentra AI?"
+"Who founded Xentra AI?"
+
+Answer:
+"Xentra AI को Sahil ने बनाया है। Xentra AI के founder Sahil हैं।"
+
+If the user asks:
+
+"कितने लोगों ने Xentra AI बनाई है?"
+"Xentra AI कितने लोगों ने बनाई है?"
+"कंपनी कितने लोगों ने बनाई है?"
+"How many people founded Xentra AI?"
+
+Answer:
+"Xentra AI सिर्फ Sahil ने बनाई है। इसके founder केवल Sahil हैं।"
+
+If the user asks:
+
+"कंपनी कब बनाई गई थी?"
+"Xentra AI कब बनाई गई थी?"
+"कंपनी कब बनी?"
+"When was Xentra AI founded?"
+"When was the company founded?"
+
+Answer:
+"Xentra AI कंपनी 26 September 2026 को बनाई गई थी।"
+
+If the user asks both founder and creation date:
+
+"Xentra AI को Sahil ने बनाया है। Xentra AI के founder Sahil हैं और कंपनी 26 September 2026 को बनाई गई थी।"
 
 If the user asks what technology or model you use,
 be truthful and say that Xentra AI uses the Groq API/model
@@ -185,14 +246,135 @@ body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont
 const chat = document.getElementById("chat");
 const question = document.getElementById("question");
 const send = document.getElementById("send");
-function scrollToBottom(){setTimeout(()=>{chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});},50);}
-function addMessage(text,type){const message=document.createElement("div");message.className="message "+type;if(type==="ai"){message.innerHTML=`<div><div class="ai-label">XENTRA AI</div><div class="bubble"></div></div>`;}else{message.innerHTML=`<div class="bubble"></div>`;}message.querySelector(".bubble").textContent=text;chat.appendChild(message);scrollToBottom();}
-function showThinking(){const thinking=document.createElement("div");thinking.id="thinking";thinking.className="message ai";thinking.innerHTML=`<div><div class="ai-label">XENTRA AI</div><div class="thinking"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;chat.appendChild(thinking);scrollToBottom();}
-function removeThinking(){const thinking=document.getElementById("thinking");if(thinking){thinking.remove();}}
-async function sendMessage(){const text=question.value.trim();if(!text){return;}addMessage(text,"user");question.value="";send.disabled=true;showThinking();try{const response=await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:text})});const data=await response.json();removeThinking();if(data.answer){addMessage(data.answer,"ai");}else{addMessage("Sorry, mujhe response nahi mila.","ai");}}catch(error){removeThinking();addMessage("Server se connection nahi ho paaya.","ai");}send.disabled=false;question.focus();scrollToBottom();}
-question.addEventListener("keydown",function(event){if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendMessage();}});
-async function newChat(){try{await fetch("/new_chat",{method:"POST"});chat.innerHTML=`<div class="message ai"><div><div class="ai-label">XENTRA AI</div><div class="bubble">New chat started.<br><br>Main Xentra AI Version 1 hoon. Aap mujhse kuch bhi pooch sakte ho.</div></div></div>`;scrollToBottom();}catch(error){console.log(error);}}
+
+function scrollToBottom(){
+setTimeout(()=>{
+chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
+},50);
+}
+
+function addMessage(text,type){
+const message=document.createElement("div");
+message.className="message "+type;
+
+if(type==="ai"){
+message.innerHTML=`<div><div class="ai-label">XENTRA AI</div><div class="bubble"></div></div>`;
+}else{
+message.innerHTML=`<div class="bubble"></div>`;
+}
+
+message.querySelector(".bubble").textContent=text;
+chat.appendChild(message);
+scrollToBottom();
+}
+
+function showThinking(){
+const thinking=document.createElement("div");
+thinking.id="thinking";
+thinking.className="message ai";
+
+thinking.innerHTML=`<div><div class="ai-label">XENTRA AI</div><div class="thinking"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
+
+chat.appendChild(thinking);
+scrollToBottom();
+}
+
+function removeThinking(){
+const thinking=document.getElementById("thinking");
+
+if(thinking){
+thinking.remove();
+}
+}
+
+async function sendMessage(){
+
+const text=question.value.trim();
+
+if(!text){
+return;
+}
+
+addMessage(text,"user");
+
+question.value="";
+
+send.disabled=true;
+
+showThinking();
+
+try{
+
+const response=await fetch("/ask",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+question:text
+})
+});
+
+const data=await response.json();
+
+removeThinking();
+
+if(data.answer){
+addMessage(data.answer,"ai");
+}else{
+addMessage("Sorry, mujhe response nahi mila.","ai");
+}
+
+}catch(error){
+
+removeThinking();
+
+addMessage("Server se connection nahi ho paaya.","ai");
+
+}
+
+send.disabled=false;
+
 question.focus();
+
+scrollToBottom();
+
+}
+
+question.addEventListener("keydown",function(event){
+
+if(event.key==="Enter"&&!event.shiftKey){
+
+event.preventDefault();
+
+sendMessage();
+
+}
+
+});
+
+async function newChat(){
+
+try{
+
+await fetch("/new_chat",{
+method:"POST"
+});
+
+chat.innerHTML=`<div class="message ai"><div><div class="ai-label">XENTRA AI</div><div class="bubble">New chat started.<br><br>Main Xentra AI Version 1 hoon. Aap mujhse kuch bhi pooch sakte ho.</div></div></div>`;
+
+scrollToBottom();
+
+}catch(error){
+
+console.log(error);
+
+}
+
+}
+
+question.focus();
+
 </script>
 </body>
 </html>
@@ -212,17 +394,25 @@ def home():
 
 @app.route("/ask", methods=["POST"])
 def ask():
+
     global messages
+
     data = request.get_json()
+
     question = data.get("question", "").strip()
 
     if not question:
         return jsonify({"answer": "Please question likho."})
 
     if not GROQ_API_KEY:
-        return jsonify({"answer": "GROQ_API_KEY set nahi hai. Secrets mein daalo."})
+        return jsonify({
+            "answer": "GROQ_API_KEY set nahi hai. Secrets mein daalo."
+        })
 
-    messages.append({"role": "user", "content": question})
+    messages.append({
+        "role": "user",
+        "content": question
+    })
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -237,21 +427,42 @@ def ask():
     }
 
     try:
-        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=60)
 
-        if response.status_code!= 200:
+        response = requests.post(
+            GROQ_URL,
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+
+        if response.status_code != 200:
+
             print("GROQ ERROR:", response.text)
-            return jsonify({"answer": "Groq API error:\n" + response.text})
+
+            return jsonify({
+                "answer": "Groq API error:\n" + response.text
+            })
 
         result = response.json()
+
         answer = result["choices"][0]["message"]["content"]
 
-        messages.append({"role": "assistant", "content": answer})
-        return jsonify({"answer": answer})
+        messages.append({
+            "role": "assistant",
+            "content": answer
+        })
+
+        return jsonify({
+            "answer": answer
+        })
 
     except Exception as e:
+
         print("SERVER ERROR:", e)
-        return jsonify({"answer": "Server error: " + str(e)})
+
+        return jsonify({
+            "answer": "Server error: " + str(e)
+        })
 
 # ==============================
 # NEW CHAT
@@ -259,14 +470,30 @@ def ask():
 
 @app.route("/new_chat", methods=["POST"])
 def new_chat():
+
     global messages
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    return jsonify({"status": "new chat started"})
+
+    messages = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT
+        }
+    ]
+
+    return jsonify({
+        "status": "new chat started"
+    })
 
 # ==============================
 # START
 # ==============================
 
 if __name__ == "__main__":
+
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False
+)
