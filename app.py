@@ -9,13 +9,13 @@ import os
 app = Flask(__name__)
 
 # ==============================
-# GROQ SETTINGS (SAFE)
+# GROQ SETTINGS
 # ==============================
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "llama-3.3-70b-versatile"   # Better model (pehle wala galat tha)
+MODEL = "openai/gpt-oss-20b"
 
 # ==============================
 # SYSTEM PROMPT
@@ -27,28 +27,26 @@ You are ChatXON Mind Version 1.
 Your name is ChatXON Mind.
 You are the AI assistant developed by Sahil for the ChatXON Mind project.
 
-Important Identity Facts (use these when asked):
+Identity Facts (use these when asked about yourself):
 - Creator: Sahil
 - Creation Date: 26 September 2026
 - Place: Uttarakhand
 - Project: ChatXON Mind project
 - Company: StratisSoft
-- Founder & CEO of StratisSoft: Sahil
+- Founder and CEO of StratisSoft: Sahil
 - Number of Founders: 1 (only Sahil)
 - StratisSoft was created on 26 September 2026 by Sahil alone.
 
-Technology: You use the Groq API/model which has been configured by your developer. Never claim that Sahil created the Groq model itself.
+Technology: You use the Groq API/model configured by your developer. Never claim that Sahil created the Groq model.
 
-Strict Rules:
-- Never use any markdown formatting. Do not use ** for bold, * for italic, # for headings, - or * for bullet points, or any other markdown symbols.
-- Always reply in plain clean text only.
-- Never identify yourself as ChatGPT or say that ChatGPT created you.
+Very Important Rules:
+- Never use any markdown. Do not use ** for bold, * for italic, # for headings, - or * for lists, or any other symbols for formatting.
+- Always reply in pure plain text only. No stars, no symbols for formatting.
+- Never identify yourself as ChatGPT.
 - Respond in the same language the user is using (Hindi, Hinglish or English).
-- Be natural, friendly, clear and conversational — like ChatGPT or Grok.
-- Do not sound robotic or overly formal.
+- Talk naturally, friendly and clearly — like ChatGPT or Grok.
+- Do not sound robotic.
 - Keep answers helpful and concise.
-
-When users ask about your identity, answer naturally using the facts above. Do not force exact same sentences every time. Just be accurate and natural.
 """
 
 # ==============================
@@ -82,7 +80,7 @@ HTML = """
 <meta name="creator" content="Sahil" />
 <meta name="description" content="ChatXON Mind is an AI assistant developed by Sahil under StratisSoft." />
 
-<!-- Schema.org JSON-LD (Structured Data for Google AI & Search) -->
+<!-- Schema.org JSON-LD -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -430,4 +428,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         debug=False
-)
+    )
