@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import os
-
-# ==============================
-# FLASK APP
-# ==============================
+import uuid
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -13,7 +11,6 @@ app = Flask(__name__)
 # ==============================
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "openai/gpt-oss-20b"
 
@@ -50,15 +47,11 @@ Very Important Rules:
 """
 
 # ==============================
-# CHAT MEMORY
+# HISTORY STORAGE (Per User)
 # ==============================
 
-messages = [
-    {
-        "role": "system",
-        "content": SYSTEM_PROMPT
-    }
-]
+# Structure: histories[user_id][chat_id] = list of messages
+histories = defaultdict(dict)
 
 # ==============================
 # HTML
@@ -72,40 +65,10 @@ HTML = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sahil's ChatXON Mind</title>
 
-<!-- Google Search Console Verification Tag -->
 <meta name="google-site-verification" content="5X4ciFi7nkTdC4nZDAojU05xgldy6vZtUzoEqAfK7VE" />
-
-<!-- SEO Meta Tags for Author & Creator -->
 <meta name="author" content="Sahil" />
 <meta name="creator" content="Sahil" />
 <meta name="description" content="ChatXON Mind is an AI assistant developed by Sahil under StratisSoft." />
-
-<!-- Schema.org JSON-LD -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "StratisSoft - ChatXON Mind",
-  "url": "https://stratissoft-1.onrender.com",
-  "author": {
-    "@type": "Person",
-    "name": "Sahil",
-    "jobTitle": "Founder & CEO"
-  },
-  "creator": {
-    "@type": "Person",
-    "name": "Sahil"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "StratisSoft",
-    "founder": {
-      "@type": "Person",
-      "name": "Sahil"
-    }
-  }
-}
-</script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -174,177 +137,194 @@ body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont
 </div>
 </div>
 </div>
+
 <script>
 const chat = document.getElementById("chat");
 const question = document.getElementById("question");
 const send = document.getElementById("send");
 
-function scrollToBottom(){
-setTimeout(()=>{
-chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
-},50);
+// ==============================
+// USER ID + CHAT ID SYSTEM
+// ==============================
+
+function getUserId() {
+    let userId = localStorage.getItem("chatxon_user_id");
+    if (!userId) {
+        userId = crypto.randomUUID();
+        localStorage.setItem("chatxon_user_id", userId);
+    }
+    return userId;
 }
 
-function addMessage(text,type){
-const message=document.createElement("div");
-message.className="message "+type;
-
-if(type==="ai"){
-message.innerHTML=`<div><div class="ai-label">CHATXON MIND</div><div class="bubble"></div></div>`;
-}else{
-message.innerHTML=`<div class="bubble"></div>`;
+function getChatId() {
+    let chatId = localStorage.getItem("chatxon_chat_id");
+    if (!chatId) {
+        chatId = crypto.randomUUID();
+        localStorage.setItem("chatxon_chat_id", chatId);
+    }
+    return chatId;
 }
 
-message.querySelector(".bubble").textContent=text;
-chat.appendChild(message);
-scrollToBottom();
+function setNewChatId() {
+    const newChatId = crypto.randomUUID();
+    localStorage.setItem("chatxon_chat_id", newChatId);
+    return newChatId;
 }
 
-function showThinking(){
-const thinking=document.createElement("div");
-thinking.id="thinking";
-thinking.className="message ai";
+// ==============================
+// UI FUNCTIONS
+// ==============================
 
-thinking.innerHTML=`<div><div class="ai-label">CHATXON MIND</div><div class="thinking"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
-
-chat.appendChild(thinking);
-scrollToBottom();
+function scrollToBottom() {
+    setTimeout(() => {
+        chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+    }, 50);
 }
 
-function removeThinking(){
-const thinking=document.getElementById("thinking");
+function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = "message " + type;
 
-if(thinking){
-thinking.remove();
+    if (type === "ai") {
+        message.innerHTML = `<div><div class="ai-label">CHATXON MIND</div><div class="bubble"></div></div>`;
+    } else {
+        message.innerHTML = `<div class="bubble"></div>`;
+    }
+
+    message.querySelector(".bubble").textContent = text;
+    chat.appendChild(message);
+    scrollToBottom();
 }
+
+function showThinking() {
+    const thinking = document.createElement("div");
+    thinking.id = "thinking";
+    thinking.className = "message ai";
+    thinking.innerHTML = `<div><div class="ai-label">CHATXON MIND</div><div class="thinking"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
+    chat.appendChild(thinking);
+    scrollToBottom();
 }
 
-async function sendMessage(){
-
-const text=question.value.trim();
-
-if(!text){
-return;
+function removeThinking() {
+    const thinking = document.getElementById("thinking");
+    if (thinking) thinking.remove();
 }
 
-addMessage(text,"user");
+// ==============================
+// SEND MESSAGE
+// ==============================
 
-question.value="";
+async function sendMessage() {
+    const text = question.value.trim();
+    if (!text) return;
 
-send.disabled=true;
+    addMessage(text, "user");
+    question.value = "";
+    send.disabled = true;
+    showThinking();
 
-showThinking();
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: text,
+                user_id: getUserId(),
+                chat_id: getChatId()
+            })
+        });
 
-try{
+        const data = await response.json();
+        removeThinking();
 
-const response=await fetch("/ask",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-question:text
-})
+        if (data.answer) {
+            addMessage(data.answer, "ai");
+        } else {
+            addMessage("Sorry, mujhe response nahi mila.", "ai");
+        }
+
+    } catch (error) {
+        removeThinking();
+        addMessage("Server se connection nahi ho paaya.", "ai");
+    }
+
+    send.disabled = false;
+    question.focus();
+    scrollToBottom();
+}
+
+// ==============================
+// NEW CHAT
+// ==============================
+
+async function newChat() {
+    const newChatId = setNewChatId();
+
+    try {
+        await fetch("/new_chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: getUserId(),
+                chat_id: newChatId
+            })
+        });
+
+        chat.innerHTML = `<div class="message ai"><div><div class="ai-label">CHATXON MIND</div><div class="bubble">New chat started.<br><br>Main ChatXON Mind Version 1 hoon. Aap mujhse kuch bhi pooch sakte ho.</div></div></div>`;
+        scrollToBottom();
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Enter key support
+question.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
 });
-
-const data=await response.json();
-
-removeThinking();
-
-if(data.answer){
-addMessage(data.answer,"ai");
-}else{
-addMessage("Sorry, mujhe response nahi mila.","ai");
-}
-
-}catch(error){
-
-removeThinking();
-
-addMessage("Server se connection nahi ho paaya.","ai");
-
-}
-
-send.disabled=false;
 
 question.focus();
-
-scrollToBottom();
-
-}
-
-question.addEventListener("keydown",function(event){
-
-if(event.key==="Enter"&&!event.shiftKey){
-
-event.preventDefault();
-
-sendMessage();
-
-}
-
-});
-
-async function newChat(){
-
-try{
-
-await fetch("/new_chat",{
-method:"POST"
-});
-
-chat.innerHTML=`<div class="message ai"><div><div class="ai-label">CHATXON MIND</div><div class="bubble">New chat started.<br><br>Main ChatXON Mind Version 1 hoon. Aap mujhse kuch bhi pooch sakte ho.</div></div></div>`;
-
-scrollToBottom();
-
-}catch(error){
-
-console.log(error);
-
-}
-
-}
-
-question.focus();
-
 </script>
 </body>
 </html>
 """
 
 # ==============================
-# HOME
+# ROUTES
 # ==============================
 
 @app.route("/")
 def home():
     return render_template_string(HTML)
 
-# ==============================
-# ASK
-# ==============================
-
 @app.route("/ask", methods=["POST"])
 def ask():
-
-    global messages
-
     data = request.get_json()
-
     question = data.get("question", "").strip()
+    user_id = data.get("user_id")
+    chat_id = data.get("chat_id")
 
     if not question:
         return jsonify({"answer": "Please question likho."})
 
-    if not GROQ_API_KEY:
-        return jsonify({
-            "answer": "GROQ_API_KEY set nahi hai. Secrets mein daalo."
-        })
+    if not user_id or not chat_id:
+        return jsonify({"answer": "User ID ya Chat ID missing hai."})
 
-    messages.append({
-        "role": "user",
-        "content": question
-    })
+    if not GROQ_API_KEY:
+        return jsonify({"answer": "GROQ_API_KEY set nahi hai."})
+
+    # Agar is user + chat ki history nahi hai to naya banao
+    if chat_id not in histories[user_id]:
+        histories[user_id][chat_id] = [
+            {"role": "system", "content": SYSTEM_PROMPT}
+        ]
+
+    messages = histories[user_id][chat_id]
+
+    messages.append({"role": "user", "content": question})
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -359,73 +339,40 @@ def ask():
     }
 
     try:
-
-        response = requests.post(
-            GROQ_URL,
-            headers=headers,
-            json=payload,
-            timeout=60
-        )
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=60)
 
         if response.status_code != 200:
-
             print("GROQ ERROR:", response.text)
-
-            return jsonify({
-                "answer": "Groq API error:\n" + response.text
-            })
+            return jsonify({"answer": "Groq API error:\n" + response.text})
 
         result = response.json()
-
         answer = result["choices"][0]["message"]["content"]
 
-        messages.append({
-            "role": "assistant",
-            "content": answer
-        })
+        messages.append({"role": "assistant", "content": answer})
 
-        return jsonify({
-            "answer": answer
-        })
+        return jsonify({"answer": answer})
 
     except Exception as e:
-
         print("SERVER ERROR:", e)
-
-        return jsonify({
-            "answer": "Server error: " + str(e)
-        })
-
-# ==============================
-# NEW CHAT
-# ==============================
+        return jsonify({"answer": "Server error: " + str(e)})
 
 @app.route("/new_chat", methods=["POST"])
 def new_chat():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    chat_id = data.get("chat_id")
 
-    global messages
+    if user_id and chat_id:
+        histories[user_id][chat_id] = [
+            {"role": "system", "content": SYSTEM_PROMPT}
+        ]
 
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT
-        }
-    ]
-
-    return jsonify({
-        "status": "new chat started"
-    })
+    return jsonify({"status": "new chat started"})
 
 # ==============================
 # START
 # ==============================
 
 if __name__ == "__main__":
-
     port = int(os.environ.get("PORT", 5000))
-
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False
-    )
+    app.run(host="0.0.0.0", port=port, debug=False)
