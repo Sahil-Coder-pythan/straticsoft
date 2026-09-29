@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string, send_from_directory
+from flask import Flask, request, jsonify, render_template_string
 import requests
 import os
 
@@ -435,14 +435,6 @@ def home():
     return render_template_string(HTML)
 
 # ==============================
-# SITEMAP - IMPORTANT FOR GOOGLE
-# ==============================
-
-@app.route("/sitemap.xml")
-def sitemap():
-    return send_from_directory('.', 'sitemap.xml', mimetype='application/xml')
-
-# ==============================
 # ASK
 # ==============================
 
@@ -550,4 +542,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         debug=False
-          )
+)
