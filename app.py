@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, send_from_directory
 import requests
 import os
 
@@ -435,6 +435,14 @@ def home():
     return render_template_string(HTML)
 
 # ==============================
+# SITEMAP - IMPORTANT FOR GOOGLE
+# ==============================
+
+@app.route("/sitemap.xml")
+def sitemap():
+    return send_from_directory('.', 'sitemap.xml')
+
+# ==============================
 # ASK
 # ==============================
 
@@ -481,7 +489,7 @@ def ask():
             timeout=60
         )
 
-        if response.status_code != 200:
+        if response.status_code!= 200:
 
             print("GROQ ERROR:", response.text)
 
@@ -542,5 +550,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         debug=False
-        )
-    
+)
