@@ -53,12 +53,6 @@ Very Important Rules:
 # HISTORY STORAGE
 # ==============================
 
-# Structure:
-# histories[user_id][chat_id] = {
-#     "title": str,
-#     "messages": list,
-#     "updated_at": str
-# }
 histories = defaultdict(dict)
 
 # ==============================
@@ -71,80 +65,383 @@ HTML = r"""
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sahil's ChatXON Mind</title>
-
-<meta name="google-site-verification"
-      content="5X4ciFi7nkTdC4nZDAojU05xgldy6vZtUzoEqAfK7VE" />
-<meta name="author" content="Sahil" />
-<meta name="creator" content="Sahil" />
-<meta name="description"
-      content="ChatXON Mind is an AI assistant developed by Sahil under StratisSoft." />
+<title>ChatXON Mind</title>
+<meta name="author" content="Sahil">
+<meta name="description" content="ChatXON Mind - AI Assistant by Sahil">
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;height:100vh;overflow:hidden;}
-.app{height:100dvh;display:flex;background:#0b0b0f;}
+  :root {
+    --bg: #0f0f13;
+    --sidebar-bg: #16161c;
+    --card: #1c1c24;
+    --border: #2a2a35;
+    --text: #ececf1;
+    --text-muted: #8b8b9a;
+    --accent: #7c5cff;
+    --accent-hover: #6a4de0;
+    --user-bubble: #2a2a35;
+    --ai-bubble: #1c1c24;
+  }
 
-/* Sidebar */
-.sidebar{width:280px;background:#111114;border-right:1px solid #24242b;display:flex;flex-direction:column;flex-shrink:0;transition:transform 0.25s ease;}
-.sidebar-header{padding:16px;border-bottom:1px solid #24242b;display:flex;align-items:center;justify-content:space-between;}
-.sidebar-title{font-size:15px;font-weight:600;}
-.new-chat-btn{background:#7c3aed;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
-.new-chat-btn:hover{background:#6d28d9;}
-.chat-list{flex:1;overflow-y:auto;padding:10px;}
-.chat-item{padding:12px 14px;border-radius:10px;cursor:pointer;font-size:14px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ccc;transition:background 0.15s;}
-.chat-item:hover{background:#1c1c22;}
-.chat-item.active{background:#2a2a35;color:white;}
-.chat-item .time{font-size:11px;color:#666;margin-top:3px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Main Area */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;}
-.topbar{height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #24242b;background:#0b0b0f;}
-.brand{display:flex;align-items:center;gap:10px;}
-.menu-btn{display:none;background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:6px;}
-.logo{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#7c3aed,#2563eb);font-weight:bold;font-size:16px;}
-.brand-text{display:flex;flex-direction:column;gap:2px;}
-.brand-name{font-size:16px;font-weight:700;}
-.version{font-size:10px;color:#888;letter-spacing:1px;}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-.chat{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 14px 150px;scroll-behavior:smooth;}
-.message{display:flex;width:100%;margin-bottom:18px;}
-.message.user{justify-content:flex-end;}
-.message.ai{justify-content:flex-start;}
-.bubble{max-width:min(760px,88%);padding:13px 15px;border-radius:18px;line-height:1.55;font-size:15px;white-space:pre-wrap;word-wrap:break-word;}
-.user.bubble{background:#2f2f38;border-bottom-right-radius:5px;}
-.ai.bubble{background:#15151b;border:1px solid #25252d;border-bottom-left-radius:5px;}
-.ai-label{font-size:10px;color:#8b8b96;margin-bottom:5px;letter-spacing:.7px;}
-.thinking{display:flex;align-items:center;gap:5px;padding:14px 16px;background:#15151b;border:1px solid #25252d;border-radius:18px;width:max-content;}
-.dot{width:6px;height:6px;background:#aaa;border-radius:50%;animation:thinking 1.2s infinite;}
-.dot:nth-child(2){animation-delay:.2s;}
-.dot:nth-child(3){animation-delay:.4s;}
-@keyframes thinking{0%,100%{opacity:.25;transform:translateY(0);}50%{opacity:1;transform:translateY(-3px);}}
+  .app {
+    display: flex;
+    height: 100dvh;
+  }
 
-.input-area{position:fixed;left:280px;right:0;bottom:0;padding:12px 14px 16px;background:linear-gradient(transparent,#0b0b0f 25%);transition:left 0.25s ease;}
-.input-box{max-width:850px;margin:auto;min-height:58px;display:flex;align-items:center;gap:8px;padding:8px 9px 8px 15px;background:#15151b;border:1px solid #303038;border-radius:18px;box-shadow:0 10px 35px rgba(0,0,0,.35);}
-.search-icon{font-size:19px;color:#8c8c95;user-select:none;}
-#question{flex:1;border:none;outline:none;background:transparent;color:white;font-size:15px;min-width:0;resize:none;}
-#question::placeholder{color:#777780;}
-.send{width:42px;height:42px;border:none;border-radius:13px;background:#fff;color:#000;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.send:active{transform:scale(.94);}
-.send:disabled{opacity:.45;cursor:not-allowed;}
+  /* ========== SIDEBAR ========== */
+  .sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
 
-/* Overlay for mobile */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:20;}
+  .sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
 
-/* Mobile */
-@media(max-width:768px){
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .menu-btn{display:block;}
-  .input-area{left:0;}
-  .overlay.show{display:block;}
-}
+  .new-chat-btn {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s;
+  }
 
-.chat::-webkit-scrollbar,.chat-list::-webkit-scrollbar{width:6px;}
-.chat::-webkit-scrollbar-track,.chat-list::-webkit-scrollbar-track{background:transparent;}
-.chat::-webkit-scrollbar-thumb,.chat-list::-webkit-scrollbar-thumb{background:#33333b;border-radius:20px;}
+  .new-chat-btn:hover {
+    background: var(--accent-hover);
+  }
+
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .chat-item {
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13.5px;
+    margin-bottom: 3px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-item:hover {
+    background: #22222b;
+    color: var(--text);
+  }
+
+  .chat-item.active {
+    background: #2a2a35;
+    color: var(--text);
+  }
+
+  .chat-item .time {
+    font-size: 11px;
+    color: #555;
+    margin-top: 3px;
+  }
+
+  /* ========== MAIN ========== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+  }
+
+  .topbar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    gap: 12px;
+  }
+
+  .menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #7c5cff, #4f46e5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+  }
+
+  .brand-name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* ========== CHAT AREA ========== */
+  .chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 16px 140px;
+    scroll-behavior: smooth;
+  }
+
+  .message {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .message.user {
+    justify-content: flex-end;
+  }
+
+  .message.ai {
+    justify-content: flex-start;
+  }
+
+  .bubble {
+    max-width: min(720px, 85%);
+    padding: 12px 16px;
+    border-radius: 16px;
+    line-height: 1.6;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .user .bubble {
+    background: var(--user-bubble);
+    border-bottom-right-radius: 4px;
+  }
+
+  .ai .bubble {
+    background: var(--ai-bubble);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+
+  .ai-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.4px;
+    font-weight: 500;
+  }
+
+  /* Welcome Screen */
+  .welcome {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+  }
+
+  .welcome-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #7c5cff, #4f46e5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+  }
+
+  .welcome h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .welcome p {
+    font-size: 15px;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+
+  /* Thinking */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 16px;
+    background: var(--ai-bubble);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: max-content;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: #888;
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  /* ========== INPUT ========== */
+  .input-area {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 16px 20px;
+    background: linear-gradient(transparent, var(--bg) 30%);
+  }
+
+  .input-box {
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px 8px 16px;
+    gap: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  #question {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    min-width: 0;
+  }
+
+  #question::placeholder {
+    color: #666;
+  }
+
+  .send {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  .send:hover {
+    background: var(--accent-hover);
+  }
+
+  .send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 20;
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 30;
+      transform: translateX(-100%);
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .menu-btn {
+      display: block;
+    }
+    .overlay.show {
+      display: block;
+    }
+  }
+
+  /* Scrollbar */
+  .chat::-webkit-scrollbar,
+  .chat-list::-webkit-scrollbar {
+    width: 5px;
+  }
+  .chat::-webkit-scrollbar-thumb,
+  .chat-list::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
 </style>
 </head>
 <body>
@@ -153,47 +450,32 @@ body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">History</div>
-      <button class="new-chat-btn" onclick="createNewChat()">+ New</button>
+      <button class="new-chat-btn" onclick="createNewChat()">
+        + New Chat
+      </button>
     </div>
-    <div class="chat-list" id="chatList">
-      <!-- Chat items will be added here -->
-    </div>
+    <div class="chat-list" id="chatList"></div>
   </div>
 
-  <!-- Overlay -->
   <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-  <!-- Main Content -->
+  <!-- Main -->
   <div class="main">
     <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="brand">
-        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
         <div class="logo">X</div>
-        <div class="brand-text">
-          <div class="brand-name">Sahil's ChatXON Mind</div>
-          <div class="version">VERSION 1 • AI ASSISTANT</div>
-        </div>
+        <div class="brand-name">ChatXON Mind</div>
       </div>
     </div>
 
     <div id="chat" class="chat">
-      <div class="message ai">
-        <div>
-          <div class="ai-label">CHATXON MIND</div>
-          <div class="bubble">Namaste! 👋<br><br>
-          Main ChatXON Mind Version 1 hoon.<br>
-          Main Sahil ke ChatXON Mind project ka AI assistant hoon.<br><br>
-          Aap mujhse kuch bhi pooch sakte ho.</div>
-        </div>
-      </div>
+      <!-- Welcome will be injected here -->
     </div>
 
     <div class="input-area">
       <div class="input-box">
-        <div class="search-icon">⌕</div>
-        <input id="question" type="text" autocomplete="off"
-               placeholder="Message ChatXON Mind...">
+        <input id="question" type="text" placeholder="Message ChatXON Mind..." autocomplete="off">
         <button id="send" class="send" onclick="sendMessage()">↑</button>
       </div>
     </div>
@@ -203,280 +485,241 @@ body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont
 <script>
 const chat = document.getElementById("chat");
 const question = document.getElementById("question");
-const send = document.getElementById("send");
+const sendBtn = document.getElementById("send");
 const chatList = document.getElementById("chatList");
 const sidebar = document.getElementById("sidebar");
 const overlay = document.getElementById("overlay");
 
 let currentChatId = null;
 
-// ==============================
-// USER ID
-// ==============================
-
 function getUserId() {
-    let userId = localStorage.getItem("chatxon_user_id");
-    if (!userId) {
-        userId = crypto.randomUUID();
-        localStorage.setItem("chatxon_user_id", userId);
-    }
-    return userId;
+  let id = localStorage.getItem("chatxon_user_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("chatxon_user_id", id);
+  }
+  return id;
 }
 
-// ==============================
-// SIDEBAR
-// ==============================
-
 function toggleSidebar() {
-    sidebar.classList.toggle("open");
-    overlay.classList.toggle("show");
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("show");
 }
 
 function closeSidebar() {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("show");
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
 }
-
-// ==============================
-// UI HELPERS
-// ==============================
 
 function scrollToBottom() {
-    setTimeout(() => {
-        chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
-    }, 50);
+  setTimeout(() => {
+    chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+  }, 40);
 }
 
-function clearChatUI() {
-    chat.innerHTML = "";
-}
-
-function addMessage(text, type) {
-    const message = document.createElement("div");
-    message.className = "message " + type;
-
-    if (type === "ai") {
-        message.innerHTML = `
-            <div>
-                <div class="ai-label">CHATXON MIND</div>
-                <div class="bubble"></div>
-            </div>`;
-    } else {
-        message.innerHTML = `<div class="bubble"></div>`;
-    }
-
-    message.querySelector(".bubble").textContent = text;
-    chat.appendChild(message);
-    scrollToBottom();
-}
-
-function showThinking() {
-    const thinking = document.createElement("div");
-    thinking.id = "thinking";
-    thinking.className = "message ai";
-    thinking.innerHTML = `
-        <div>
-            <div class="ai-label">CHATXON MIND</div>
-            <div class="thinking">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </div>
-        </div>`;
-    chat.appendChild(thinking);
-    scrollToBottom();
-}
-
-function removeThinking() {
-    const thinking = document.getElementById("thinking");
-    if (thinking) thinking.remove();
+function clearChat() {
+  chat.innerHTML = "";
 }
 
 function showWelcome() {
-    clearChatUI();
-    chat.innerHTML = `
-        <div class="message ai">
-            <div>
-                <div class="ai-label">CHATXON MIND</div>
-                <div class="bubble">
-                    Namaste! 👋<br><br>
-                    Main ChatXON Mind Version 1 hoon.<br>
-                    Main Sahil ke ChatXON Mind project ka AI assistant hoon.<br><br>
-                    Aap mujhse kuch bhi pooch sakte ho.
-                </div>
-            </div>
-        </div>`;
+  clearChat();
+  chat.innerHTML = `
+    <div class="welcome">
+      <div class="welcome-logo">X</div>
+      <h1>ChatXON Mind</h1>
+      <p>How can I help you today?</p>
+    </div>
+  `;
 }
 
-// ==============================
-// HISTORY FUNCTIONS
-// ==============================
+function addMessage(text, type) {
+  // Remove welcome if present
+  const welcome = chat.querySelector(".welcome");
+  if (welcome) welcome.remove();
+
+  const div = document.createElement("div");
+  div.className = `message ${type}`;
+
+  if (type === "ai") {
+    div.innerHTML = `
+      <div>
+        <div class="ai-label">CHATXON MIND</div>
+        <div class="bubble"></div>
+      </div>
+    `;
+  } else {
+    div.innerHTML = `<div class="bubble"></div>`;
+  }
+
+  div.querySelector(".bubble").textContent = text;
+  chat.appendChild(div);
+  scrollToBottom();
+}
+
+function showThinking() {
+  const div = document.createElement("div");
+  div.id = "thinking";
+  div.className = "message ai";
+  div.innerHTML = `
+    <div>
+      <div class="ai-label">CHATXON MIND</div>
+      <div class="thinking">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+  `;
+  chat.appendChild(div);
+  scrollToBottom();
+}
+
+function removeThinking() {
+  const el = document.getElementById("thinking");
+  if (el) el.remove();
+}
 
 async function loadChatList() {
-    try {
-        const res = await fetch("/get_chats", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: getUserId() })
-        });
-        const data = await res.json();
-        renderChatList(data.chats || []);
-    } catch (e) {
-        console.log(e);
-    }
+  try {
+    const res = await fetch("/get_chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: getUserId() })
+    });
+    const data = await res.json();
+    renderChatList(data.chats || []);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function renderChatList(chats) {
-    chatList.innerHTML = "";
+  chatList.innerHTML = "";
+  if (chats.length === 0) {
+    chatList.innerHTML = `<div style="padding:24px;text-align:center;color:#555;font-size:13px;">No conversations yet</div>`;
+    return;
+  }
 
-    if (chats.length === 0) {
-        chatList.innerHTML = `<div style="padding:20px;color:#666;font-size:13px;text-align:center;">No chats yet</div>`;
-        return;
-    }
-
-    chats.forEach(c => {
-        const item = document.createElement("div");
-        item.className = "chat-item" + (c.chat_id === currentChatId ? " active" : "");
-        item.innerHTML = `
-            <div>${c.title || "New Chat"}</div>
-            <div class="time">${c.updated_at || ""}</div>
-        `;
-        item.onclick = () => loadChat(c.chat_id);
-        chatList.appendChild(item);
-    });
+  chats.forEach(c => {
+    const item = document.createElement("div");
+    item.className = "chat-item" + (c.chat_id === currentChatId ? " active" : "");
+    item.innerHTML = `
+      <div>${c.title || "New Chat"}</div>
+      <div class="time">${c.updated_at || ""}</div>
+    `;
+    item.onclick = () => loadChat(c.chat_id);
+    chatList.appendChild(item);
+  });
 }
 
 async function loadChat(chatId) {
-    currentChatId = chatId;
-    localStorage.setItem("chatxon_chat_id", chatId);
-    closeSidebar();
+  currentChatId = chatId;
+  localStorage.setItem("chatxon_chat_id", chatId);
+  closeSidebar();
 
-    try {
-        const res = await fetch("/get_chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: getUserId(),
-                chat_id: chatId
-            })
-        });
-        const data = await res.json();
+  try {
+    const res = await fetch("/get_chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: getUserId(), chat_id: chatId })
+    });
+    const data = await res.json();
 
-        clearChatUI();
+    clearChat();
 
-        if (data.messages && data.messages.length > 0) {
-            data.messages.forEach(msg => {
-                if (msg.role === "user") {
-                    addMessage(msg.content, "user");
-                } else if (msg.role === "assistant") {
-                    addMessage(msg.content, "ai");
-                }
-            });
-        } else {
-            showWelcome();
-        }
-
-        loadChatList();
-    } catch (e) {
-        console.log(e);
-        showWelcome();
-    }
-}
-
-async function createNewChat() {
-    try {
-        const res = await fetch("/new_chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: getUserId() })
-        });
-        const data = await res.json();
-
-        currentChatId = data.chat_id;
-        localStorage.setItem("chatxon_chat_id", currentChatId);
-
-        showWelcome();
-        loadChatList();
-        closeSidebar();
-        question.focus();
-    } catch (e) {
-        console.log(e);
-    }
-}
-
-// ==============================
-// SEND MESSAGE
-// ==============================
-
-async function sendMessage() {
-    const text = question.value.trim();
-    if (!text) return;
-
-    // Agar koi chat selected nahi hai to naya banao
-    if (!currentChatId) {
-        await createNewChat();
-    }
-
-    addMessage(text, "user");
-    question.value = "";
-    send.disabled = true;
-    showThinking();
-
-    try {
-        const res = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                question: text,
-                user_id: getUserId(),
-                chat_id: currentChatId
-            })
-        });
-
-        const data = await res.json();
-        removeThinking();
-
-        if (data.answer) {
-            addMessage(data.answer, "ai");
-        } else {
-            addMessage("Sorry, mujhe response nahi mila.", "ai");
-        }
-
-        // Title update ke liye list refresh
-        loadChatList();
-
-    } catch (error) {
-        removeThinking();
-        addMessage("Server se connection nahi ho paaya.", "ai");
-    }
-
-    send.disabled = false;
-    question.focus();
-    scrollToBottom();
-}
-
-// ==============================
-// INIT
-// ==============================
-
-async function init() {
-    const savedChatId = localStorage.getItem("chatxon_chat_id");
-
-    if (savedChatId) {
-        currentChatId = savedChatId;
-        await loadChat(savedChatId);
+    if (data.messages && data.messages.length > 0) {
+      data.messages.forEach(m => {
+        if (m.role === "user") addMessage(m.content, "user");
+        else if (m.role === "assistant") addMessage(m.content, "ai");
+      });
     } else {
-        await createNewChat();
+      showWelcome();
     }
 
     loadChatList();
+  } catch (e) {
+    showWelcome();
+  }
 }
 
-question.addEventListener("keydown", function (event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
+async function createNewChat() {
+  try {
+    const res = await fetch("/new_chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: getUserId() })
+    });
+    const data = await res.json();
+    currentChatId = data.chat_id;
+    localStorage.setItem("chatxon_chat_id", currentChatId);
+    showWelcome();
+    loadChatList();
+    closeSidebar();
+    question.focus();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function sendMessage() {
+  const text = question.value.trim();
+  if (!text) return;
+
+  if (!currentChatId) {
+    await createNewChat();
+  }
+
+  addMessage(text, "user");
+  question.value = "";
+  sendBtn.disabled = true;
+  showThinking();
+
+  try {
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: text,
+        user_id: getUserId(),
+        chat_id: currentChatId
+      })
+    });
+
+    const data = await res.json();
+    removeThinking();
+
+    if (data.answer) {
+      addMessage(data.answer, "ai");
+    } else {
+      addMessage("Something went wrong. Please try again.", "ai");
     }
+
+    loadChatList();
+  } catch (e) {
+    removeThinking();
+    addMessage("Connection error. Please try again.", "ai");
+  }
+
+  sendBtn.disabled = false;
+  question.focus();
+}
+
+async function init() {
+  const saved = localStorage.getItem("chatxon_chat_id");
+  if (saved) {
+    currentChatId = saved;
+    await loadChat(saved);
+  } else {
+    await createNewChat();
+  }
+  loadChatList();
+}
+
+question.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 });
 
 init();
@@ -487,17 +730,11 @@ question.focus();
 """
 
 # ==============================
-# HELPER
+# HELPERS + ROUTES
 # ==============================
-
 
 def get_current_time():
-    return datetime.now().strftime("%d %b, %I:%M %p")
-
-
-# ==============================
-# ROUTES
-# ==============================
+    return datetime.now().strftime("%d %b • %I:%M %p")
 
 
 @app.route("/")
@@ -509,7 +746,6 @@ def home():
 def get_chats():
     data = request.get_json()
     user_id = data.get("user_id")
-
     if not user_id:
         return jsonify({"chats": []})
 
@@ -523,9 +759,7 @@ def get_chats():
             "updated_at": chat_data.get("updated_at", ""),
         })
 
-    # Latest first
     chat_list.sort(key=lambda x: x["updated_at"], reverse=True)
-
     return jsonify({"chats": chat_list})
 
 
@@ -542,12 +776,7 @@ def get_chat():
     if not chat_data:
         return jsonify({"messages": []})
 
-    # System message hata ke bhejo
-    messages = [
-        msg for msg in chat_data["messages"]
-        if msg["role"] != "system"
-    ]
-
+    messages = [m for m in chat_data["messages"] if m["role"] != "system"]
     return jsonify({"messages": messages})
 
 
@@ -555,18 +784,15 @@ def get_chat():
 def new_chat():
     data = request.get_json()
     user_id = data.get("user_id")
-
     if not user_id:
         return jsonify({"error": "user_id required"}), 400
 
-    chat_id = str(os.urandom(8).hex())
-
+    chat_id = os.urandom(8).hex()
     histories[user_id][chat_id] = {
         "title": "New Chat",
         "messages": [{"role": "system", "content": SYSTEM_PROMPT}],
         "updated_at": get_current_time(),
     }
-
     return jsonify({"chat_id": chat_id})
 
 
@@ -578,15 +804,12 @@ def ask():
     chat_id = data.get("chat_id")
 
     if not question:
-        return jsonify({"answer": "Please question likho."})
-
+        return jsonify({"answer": "Please type something."})
     if not user_id or not chat_id:
-        return jsonify({"answer": "User ID ya Chat ID missing hai."})
-
+        return jsonify({"answer": "Session error. Please refresh."})
     if not GROQ_API_KEY:
-        return jsonify({"answer": "GROQ_API_KEY set nahi hai."})
+        return jsonify({"answer": "API key not configured."})
 
-    # Create chat if not exists
     if chat_id not in histories[user_id]:
         histories[user_id][chat_id] = {
             "title": "New Chat",
@@ -596,12 +819,10 @@ def ask():
 
     chat_data = histories[user_id][chat_id]
     messages = chat_data["messages"]
-
     messages.append({"role": "user", "content": question})
 
-    # Auto title from first message
     if chat_data["title"] == "New Chat":
-        chat_data["title"] = question[:40] + ("..." if len(question) > 40 else "")
+        chat_data["title"] = question[:42] + ("..." if len(question) > 42 else "")
 
     chat_data["updated_at"] = get_current_time()
 
@@ -609,7 +830,6 @@ def ask():
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
-
     payload = {
         "model": MODEL,
         "messages": messages,
@@ -618,32 +838,17 @@ def ask():
     }
 
     try:
-        response = requests.post(
-            GROQ_URL,
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=60)
         if response.status_code != 200:
-            print("GROQ ERROR:", response.text)
-            return jsonify({"answer": "Groq API error:\n" + response.text})
+            return jsonify({"answer": "API Error: " + response.text})
 
-        result = response.json()
-        answer = result["choices"][0]["message"]["content"]
-
+        answer = response.json()["choices"][0]["message"]["content"]
         messages.append({"role": "assistant", "content": answer})
-
         return jsonify({"answer": answer})
 
-    except Exception as error:
-        print("SERVER ERROR:", error)
-        return jsonify({"answer": "Server error: " + str(error)})
+    except Exception as e:
+        return jsonify({"answer": "Server error: " + str(e)})
 
-
-# ==============================
-# START
-# ==============================
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
