@@ -185,6 +185,42 @@ HTML = """
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sahil's ChatXON Mind</title>
+
+<!-- Google Search Console Verification Tag -->
+<meta name="google-site-verification" content="5X4ciFi7nkTdC4nZDAojU05xgldy6vZtUzoEqAfK7VE" />
+
+<!-- SEO Meta Tags for Author & Creator -->
+<meta name="author" content="Sahil" />
+<meta name="creator" content="Sahil" />
+<meta name="description" content="ChatXON Mind is an AI assistant developed by Sahil under StratisSoft." />
+
+<!-- Schema.org JSON-LD (Structured Data for Google AI & Search) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "StratisSoft - ChatXON Mind",
+  "url": "https://stratissoft-1.onrender.com",
+  "author": {
+    "@type": "Person",
+    "name": "Sahil",
+    "jobTitle": "Founder & CEO"
+  },
+  "creator": {
+    "@type": "Person",
+    "name": "Sahil"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "StratisSoft",
+    "founder": {
+      "@type": "Person",
+      "name": "Sahil"
+    }
+  }
+}
+</script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0b0b0f;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;height:100vh;overflow:hidden;}
@@ -506,4 +542,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         debug=False
-)
+        )
+    
