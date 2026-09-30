@@ -13,7 +13,9 @@ app = Flask(__name__)
 # ==================================================
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 MODEL = "openai/gpt-oss-20b"
 
 
@@ -144,6 +146,7 @@ Very Important Rules:
 # ==================================================
 
 def get_current_time():
+
     return datetime.now().strftime("%d %b • %I:%M %p")
 
 
@@ -1454,41 +1457,48 @@ async function loadChat(chatId) {
       await res.json();
 
 
-    clearChat();
+    if (!data.messages || data.messages.length === 0) {
 
-
-    if (
-      data.messages &&
-      data.messages.length > 0
-    ) {
-
-      data.messages.forEach(m => {
-
-        if (m.role === "user") {
-
-          addMessage(
-            m.content,
-            "user"
-          );
-
-        }
-
-        else if (
-          m.role === "assistant"
-        ) {
-
-          addMessage(
-            m.content,
-            "ai"
-          );
-
-        }
-
-      });
+      return false;
 
     }
 
-    else {
+
+    clearChat();
+
+
+    let userOrAiMessages = 0;
+
+    data.messages.forEach(m => {
+
+      if (m.role === "user") {
+
+        addMessage(
+          m.content,
+          "user"
+        );
+
+        userOrAiMessages++;
+
+      }
+
+      else if (
+        m.role === "assistant"
+      ) {
+
+        addMessage(
+          m.content,
+          "ai"
+        );
+
+        userOrAiMessages++;
+
+      }
+
+    });
+
+
+    if (userOrAiMessages === 0) {
 
       showWelcome();
 
@@ -1497,10 +1507,12 @@ async function loadChat(chatId) {
 
     loadChatList();
 
+    return true;
+
 
   } catch (e) {
 
-    showWelcome();
+    return false;
 
   }
 
@@ -1696,16 +1708,17 @@ async function init() {
     );
 
 
+  let success = false;
+
+
   if (saved) {
 
-    currentChatId =
-      saved;
-
-    await loadChat(saved);
+    success = await loadChat(saved);
 
   }
 
-  else {
+
+  if (!success) {
 
     await createNewChat();
 
@@ -1754,6 +1767,7 @@ question.focus();
 
 @app.route("/")
 def home():
+
     return render_template_string(HTML)
 
 
@@ -1763,41 +1777,68 @@ def home():
 
 @app.route("/get_chats", methods=["POST"])
 def get_chats():
-    data = request.get_json() or {}
-    user_id = data.get("user_id")
+
+    data = (
+        request.get_json() or {}
+    )
+
+    user_id = (
+        data.get("user_id")
+    )
+
 
     if not user_id:
+
         return jsonify({
             "chats": []
         })
 
+
     ensure_user(user_id)
 
-    conn = get_db()
 
-    rows = conn.execute(
-        """
-        SELECT
-            chat_id,
-            title,
-            updated_at
-        FROM chats
-        WHERE user_id = ?
-        ORDER BY updated_at DESC
-        """,
-        (user_id,)
-    ).fetchall()
+    conn = (
+        get_db()
+    )
+
+
+    rows = (
+        conn.execute(
+            """
+            SELECT
+                chat_id,
+                title,
+                updated_at
+            FROM chats
+            WHERE user_id = ?
+            ORDER BY updated_at DESC
+            """,
+            (user_id,)
+        ).fetchall()
+    )
+
 
     conn.close()
 
+
     chats = [
+
         {
-            "chat_id": row["chat_id"],
-            "title": row["title"],
-            "updated_at": row["updated_at"]
+            "chat_id":
+                row["chat_id"],
+
+            "title":
+                row["title"],
+
+            "updated_at":
+                row["updated_at"]
+
         }
+
         for row in rows
+
     ]
+
 
     return jsonify({
         "chats": chats
@@ -1810,56 +1851,90 @@ def get_chats():
 
 @app.route("/get_chat", methods=["POST"])
 def get_chat():
-    data = request.get_json() or {}
 
-    user_id = data.get("user_id")
-    chat_id = data.get("chat_id")
+    data = (
+        request.get_json() or {}
+    )
+
+
+    user_id = (
+        data.get("user_id")
+    )
+
+    chat_id = (
+        data.get("chat_id")
+    )
+
 
     if not user_id or not chat_id:
+
         return jsonify({
             "messages": []
         })
 
-    conn = get_db()
+
+    conn = (
+        get_db()
+    )
+
 
     # IMPORTANT:
-    # chat_id AND user_id dono check honge.
+    # chat_id AND user_id दोनों check होंगे.
+    # इससे दूसरे user की chat नहीं खुलेगी.
 
-    chat = conn.execute(
-        """
-        SELECT chat_id
-        FROM chats
-        WHERE chat_id = ?
-        AND user_id = ?
-        """,
-        (chat_id, user_id)
-    ).fetchone()
+    chat = (
+        conn.execute(
+            """
+            SELECT chat_id
+            FROM chats
+            WHERE chat_id = ?
+            AND user_id = ?
+            """,
+            (chat_id, user_id)
+        ).fetchone()
+    )
+
 
     if not chat:
+
         conn.close()
+
         return jsonify({
             "messages": []
         })
 
-    rows = conn.execute(
-        """
-        SELECT role, content
-        FROM messages
-        WHERE chat_id = ?
-        ORDER BY id ASC
-        """,
-        (chat_id,)
-    ).fetchall()
+
+    rows = (
+        conn.execute(
+            """
+            SELECT role, content
+            FROM messages
+            WHERE chat_id = ?
+            ORDER BY id ASC
+            """,
+            (chat_id,)
+        ).fetchall()
+    )
+
 
     conn.close()
 
+
     messages = [
+
         {
-            "role": row["role"],
-            "content": row["content"]
+            "role":
+                row["role"],
+
+            "content":
+                row["content"]
+
         }
+
         for row in rows
+
     ]
+
 
     return jsonify({
         "messages": messages
@@ -1872,22 +1947,42 @@ def get_chat():
 
 @app.route("/new_chat", methods=["POST"])
 def new_chat():
-    data = request.get_json() or {}
 
-    user_id = data.get("user_id")
+    data = (
+        request.get_json() or {}
+    )
+
+
+    user_id = (
+        data.get("user_id")
+    )
+
 
     if not user_id:
+
         return jsonify({
-            "error": "user_id required"
+            "error":
+            "user_id required"
         }), 400
+
 
     ensure_user(user_id)
 
-    chat_id = uuid.uuid4().hex
 
-    now = get_current_time()
+    chat_id = (
+        uuid.uuid4().hex
+    )
 
-    conn = get_db()
+
+    now = (
+        get_current_time()
+    )
+
+
+    conn = (
+        get_db()
+    )
+
 
     conn.execute(
         """
@@ -1910,7 +2005,8 @@ def new_chat():
         )
     )
 
-    # System prompt bhi database mein rahega
+
+    # System prompt भी database में रहेगा
 
     conn.execute(
         """
@@ -1931,11 +2027,15 @@ def new_chat():
         )
     )
 
+
     conn.commit()
+
     conn.close()
 
+
     return jsonify({
-        "chat_id": chat_id
+        "chat_id":
+        chat_id
     })
 
 
@@ -1945,85 +2045,137 @@ def new_chat():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    data = request.get_json() or {}
 
-    question = data.get("question", "").strip()
+    data = (
+        request.get_json() or {}
+    )
 
-    user_id = data.get("user_id")
 
-    chat_id = data.get("chat_id")
+    question = (
+        data.get(
+            "question",
+            ""
+        ).strip()
+    )
+
+
+    user_id = (
+        data.get("user_id")
+    )
+
+
+    chat_id = (
+        data.get("chat_id")
+    )
+
 
     if not question:
+
         return jsonify({
-            "answer": "Please type something."
+            "answer":
+            "Please type something."
         })
+
 
     if not user_id or not chat_id:
+
         return jsonify({
-            "answer": "Session error. Please refresh."
+            "answer":
+            "Session error. Please refresh."
         })
 
+
     if not GROQ_API_KEY:
+
         return jsonify({
-            "answer": "API key not configured."
+            "answer":
+            "API key not configured."
         })
+
 
     ensure_user(user_id)
 
-    conn = get_db()
+
+    conn = (
+        get_db()
+    )
+
 
     # ------------------------------------------------
     # SECURITY CHECK
     # ------------------------------------------------
 
-    chat = conn.execute(
-        """
-        SELECT
-            chat_id,
-            title
-        FROM chats
-        WHERE chat_id = ?
-        AND user_id = ?
-        """,
-        (
-            chat_id,
-            user_id
-        )
-    ).fetchone()
+    chat = (
+        conn.execute(
+            """
+            SELECT
+                chat_id,
+                title
+            FROM chats
+            WHERE chat_id = ?
+            AND user_id = ?
+            """,
+            (
+                chat_id,
+                user_id
+            )
+        ).fetchone()
+    )
+
+
+    # अगर chat इस user की नहीं है
 
     if not chat:
+
         conn.close()
+
         return jsonify({
-            "answer": "Session error. Please create a new chat."
+            "answer":
+            "Session error. Please create a new chat."
         })
+
 
     # ------------------------------------------------
     # OLD MESSAGES
     # ------------------------------------------------
 
-    rows = conn.execute(
-        """
-        SELECT role, content
-        FROM messages
-        WHERE chat_id = ?
-        ORDER BY id ASC
-        """,
-        (chat_id,)
-    ).fetchall()
+    rows = (
+        conn.execute(
+            """
+            SELECT role, content
+            FROM messages
+            WHERE chat_id = ?
+            ORDER BY id ASC
+            """,
+            (chat_id,)
+        ).fetchall()
+    )
+
 
     messages = [
+
         {
-            "role": row["role"],
-            "content": row["content"]
+            "role":
+                row["role"],
+
+            "content":
+                row["content"]
+
         }
+
         for row in rows
+
     ]
 
+
     # ------------------------------------------------
-    # USER MESSAGE DATABASE MEIN SAVE
+    # USER MESSAGE DATABASE में SAVE
     # ------------------------------------------------
 
-    now = get_current_time()
+    now = (
+        get_current_time()
+    )
+
 
     conn.execute(
         """
@@ -2044,16 +2196,26 @@ def ask():
         )
     )
 
+
     # ------------------------------------------------
     # CHAT TITLE
     # ------------------------------------------------
 
-    current_title = chat["title"]
+    current_title = (
+        chat["title"]
+    )
+
 
     if current_title == "New Chat":
-        new_title = question[:42]
+
+        new_title = (
+            question[:42]
+        )
+
         if len(question) > 42:
+
             new_title += "..."
+
 
         conn.execute(
             """
@@ -2072,6 +2234,7 @@ def ask():
         )
 
     else:
+
         conn.execute(
             """
             UPDATE chats
@@ -2086,52 +2249,100 @@ def ask():
             )
         )
 
+
     conn.commit()
+
     conn.close()
+
 
     # ------------------------------------------------
     # GROQ REQUEST
     # ------------------------------------------------
 
     messages.append({
-        "role": "user",
-        "content": question
+        "role":
+        "user",
+
+        "content":
+        question
     })
 
+
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
+
+        "Authorization":
+        f"Bearer {GROQ_API_KEY}",
+
+        "Content-Type":
+        "application/json"
+
     }
+
 
     payload = {
-        "model": MODEL,
-        "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 2048
+
+        "model":
+        MODEL,
+
+        "messages":
+        messages,
+
+        "temperature":
+        0.7,
+
+        "max_tokens":
+        2048
+
     }
 
+
     try:
-        response = requests.post(
-            GROQ_URL,
-            headers=headers,
-            json=payload,
-            timeout=60
+
+        response = (
+            requests.post(
+                GROQ_URL,
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
         )
 
+
         if response.status_code != 200:
+
             return jsonify({
-                "answer": "API Error: " + response.text
+
+                "answer":
+                "API Error: "
+                + response.text
+
             })
 
-        result = response.json()
 
-        answer = result["choices"][0]["message"]["content"]
+        result = (
+            response.json()
+        )
+
+
+        answer = (
+            result[
+                "choices"
+            ][0][
+                "message"
+            ][
+                "content"
+            ]
+        )
+
 
         # ------------------------------------------------
-        # AI ANSWER DATABASE MEIN SAVE
+        # AI ANSWER DATABASE में SAVE
         # ------------------------------------------------
 
-        conn = get_db()
+        conn = (
+            get_db()
+        )
+
 
         conn.execute(
             """
@@ -2152,6 +2363,7 @@ def ask():
             )
         )
 
+
         conn.execute(
             """
             UPDATE chats
@@ -2166,16 +2378,24 @@ def ask():
             )
         )
 
+
         conn.commit()
+
         conn.close()
 
+
         return jsonify({
-            "answer": answer
+            "answer":
+            answer
         })
 
+
     except Exception as e:
+
         return jsonify({
-            "answer": "Server error: " + str(e)
+            "answer":
+            "Server error: "
+            + str(e)
         })
 
 
@@ -2184,7 +2404,16 @@ def ask():
 # ==================================================
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+
+    port = (
+        int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        )
+    )
+
 
     app.run(
         host="0.0.0.0",
