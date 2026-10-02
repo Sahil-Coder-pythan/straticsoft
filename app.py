@@ -1,13 +1,15 @@
 import os
 import sqlite3
 import uuid
-import base64
+
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template_string, request
 import requests
 
+
 app = Flask(__name__)
+
 
 # ==================================================
 # GROQ SETTINGS
@@ -15,12 +17,17 @@ app = Flask(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
+# Customer API key
+# This key will be stored in Render Environment Variables.
+CUSTOMER_API_KEY = os.environ.get("CUSTOMER_API_KEY")
+
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Text-only model (fallback)
+
+# Text-only model
 MODEL_TEXT = "openai/gpt-oss-20b"
 
-# Vision / multimodal model (supports images)
+# Vision / multimodal model
 MODEL_VISION = "qwen/qwen3.8-27b"
 
 MODEL = MODEL_TEXT
@@ -34,10 +41,11 @@ DATABASE = os.environ.get("DATABASE_PATH", "chatxon.db")
 
 
 def get_db():
+
     conn = sqlite3.connect(DATABASE)
+
     conn.row_factory = sqlite3.Row
 
-    # Foreign key system ON
     conn.execute("PRAGMA foreign_keys = ON")
 
     return conn
@@ -94,7 +102,10 @@ def init_database():
         )
     """)
 
-    # Faster searching
+    # ----------------------------------------------
+    # INDEXES
+    # ----------------------------------------------
+
     conn.execute("""
         CREATE INDEX IF NOT EXISTS idx_chats_user
         ON chats(user_id)
@@ -106,10 +117,11 @@ def init_database():
     """)
 
     conn.commit()
+
     conn.close()
 
 
-# Database automatically initialize
+# Initialize database
 init_database()
 
 
@@ -165,6 +177,7 @@ def get_current_time():
 def ensure_user(user_id):
 
     if not user_id:
+
         return False
 
     conn = get_db()
@@ -181,7 +194,10 @@ def ensure_user(user_id):
             INSERT INTO users (user_id, created_at)
             VALUES (?, ?)
             """,
-            (user_id, get_current_time())
+            (
+                user_id,
+                get_current_time()
+            )
         )
 
         conn.commit()
@@ -196,13 +212,19 @@ def ensure_user(user_id):
 # ==================================================
 
 def get_html():
-    """Load the HTML template from file."""
-    import os
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "template.html")
-    with open(path, "r", encoding="utf-8") as f:
+
+    path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "template.html"
+    )
+
+    with open(
+        path,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
         return f.read()
-
-
 
 
 # ==================================================
@@ -212,7 +234,9 @@ def get_html():
 @app.route("/")
 def home():
 
-    return render_template_string(get_html())
+    return render_template_string(
+        get_html()
+    )
 
 
 # ==================================================
@@ -226,19 +250,15 @@ def get_chats():
 
     user_id = data.get("user_id")
 
-
     if not user_id:
 
         return jsonify({
             "chats": []
         })
 
-
     ensure_user(user_id)
 
-
     conn = get_db()
-
 
     rows = conn.execute(
         """
@@ -253,25 +273,19 @@ def get_chats():
         (user_id,)
     ).fetchall()
 
-
     conn.close()
-
 
     chats = [
 
         {
             "chat_id": row["chat_id"],
-
             "title": row["title"],
-
             "updated_at": row["updated_at"]
-
         }
 
         for row in rows
 
     ]
-
 
     return jsonify({
         "chats": chats
@@ -287,11 +301,9 @@ def get_chat():
 
     data = request.get_json() or {}
 
-
     user_id = data.get("user_id")
 
     chat_id = data.get("chat_id")
-
 
     if not user_id or not chat_id:
 
@@ -299,9 +311,7 @@ def get_chat():
             "messages": []
         })
 
-
     conn = get_db()
-
 
     chat = conn.execute(
         """
@@ -310,9 +320,11 @@ def get_chat():
         WHERE chat_id = ?
         AND user_id = ?
         """,
-        (chat_id, user_id)
+        (
+            chat_id,
+            user_id
+        )
     ).fetchone()
-
 
     if not chat:
 
@@ -321,7 +333,6 @@ def get_chat():
         return jsonify({
             "messages": []
         })
-
 
     rows = conn.execute(
         """
@@ -333,23 +344,18 @@ def get_chat():
         (chat_id,)
     ).fetchall()
 
-
     conn.close()
-
 
     messages = [
 
         {
             "role": row["role"],
-
             "content": row["content"]
-
         }
 
         for row in rows
 
     ]
-
 
     return jsonify({
         "messages": messages
@@ -365,9 +371,7 @@ def new_chat():
 
     data = request.get_json() or {}
 
-
     user_id = data.get("user_id")
-
 
     if not user_id:
 
@@ -375,18 +379,13 @@ def new_chat():
             "error": "user_id required"
         }), 400
 
-
     ensure_user(user_id)
-
 
     chat_id = uuid.uuid4().hex
 
-
     now = get_current_time()
 
-
     conn = get_db()
-
 
     conn.execute(
         """
@@ -409,7 +408,6 @@ def new_chat():
         )
     )
 
-
     conn.execute(
         """
         INSERT INTO messages
@@ -429,11 +427,9 @@ def new_chat():
         )
     )
 
-
     conn.commit()
 
     conn.close()
-
 
     return jsonify({
         "chat_id": chat_id
@@ -449,30 +445,29 @@ def ask():
 
     data = request.get_json() or {}
 
-
     question = data.get(
         "question",
         ""
     ).strip()
 
-
     user_id = data.get("user_id")
-
 
     chat_id = data.get("chat_id")
 
-
-    # Optional list of base64 data-URL images from frontend
+    # Optional images
     images = data.get("images") or []
+
     if not isinstance(images, list):
+
         images = []
 
-    # Keep only valid image data URLs (max 3)
+    # Keep maximum 3 images
     images = [
-        img for img in images
-        if isinstance(img, str) and img.startswith("data:image")
+        img
+        for img in images
+        if isinstance(img, str)
+        and img.startswith("data:image")
     ][:3]
-
 
     if not question and not images:
 
@@ -480,13 +475,11 @@ def ask():
             "answer": "Please type something or attach an image."
         })
 
-
     if not user_id or not chat_id:
 
         return jsonify({
             "session_error": True
         })
-
 
     if not GROQ_API_KEY:
 
@@ -494,12 +487,9 @@ def ask():
             "answer": "API key not configured."
         })
 
-
     ensure_user(user_id)
 
-
     conn = get_db()
-
 
     chat = conn.execute(
         """
@@ -516,7 +506,6 @@ def ask():
         )
     ).fetchone()
 
-
     if not chat:
 
         conn.close()
@@ -524,7 +513,6 @@ def ask():
         return jsonify({
             "session_error": True
         })
-
 
     rows = conn.execute(
         """
@@ -536,29 +524,30 @@ def ask():
         (chat_id,)
     ).fetchall()
 
-
     messages = [
 
         {
             "role": row["role"],
-
             "content": row["content"]
-
         }
 
         for row in rows
 
     ]
 
-
     now = get_current_time()
 
-
-    # Store text note in DB (images not persisted as base64 to keep DB small)
+    # Store text in database
     store_content = question
-    if images:
-        store_content = (question + "\n\n[User attached " + str(len(images)) + " image(s)]").strip()
 
+    if images:
+
+        store_content = (
+            question
+            + "\n\n[User attached "
+            + str(len(images))
+            + " image(s)]"
+        ).strip()
 
     conn.execute(
         """
@@ -579,18 +568,17 @@ def ask():
         )
     )
 
-
     current_title = chat["title"]
-
 
     if current_title == "New Chat":
 
-        new_title = (question or "Image chat")[:42]
+        new_title = (
+            question or "Image chat"
+        )[:42]
 
         if len(question or "") > 42:
 
             new_title += "..."
-
 
         conn.execute(
             """
@@ -618,36 +606,40 @@ def ask():
             AND user_id = ?
             """,
             (
-                now,
+                get_current_time(),
                 chat_id,
                 user_id
             )
         )
 
-
     conn.commit()
 
     conn.close()
 
+    # ----------------------------------------------
+    # BUILD API MESSAGE
+    # ----------------------------------------------
 
-    # Build user message for API
-    # If images present → multimodal content list + vision model
     if images:
 
         content_parts = []
 
         if question:
+
             content_parts.append({
                 "type": "text",
                 "text": question
             })
+
         else:
+
             content_parts.append({
                 "type": "text",
                 "text": "Please look at the attached image(s) and help me."
             })
 
         for img_data in images:
+
             content_parts.append({
                 "type": "image_url",
                 "image_url": {
@@ -661,7 +653,7 @@ def ask():
         })
 
         use_model = MODEL_VISION
-        # Free tier OTPM limit is 1000 — keep max_tokens under it for vision
+
         max_out_tokens = 800
 
     else:
@@ -672,8 +664,8 @@ def ask():
         })
 
         use_model = MODEL_TEXT
-        max_out_tokens = 2048
 
+        max_out_tokens = 2048
 
     headers = {
 
@@ -682,7 +674,6 @@ def ask():
         "Content-Type": "application/json"
 
     }
-
 
     payload = {
 
@@ -696,7 +687,6 @@ def ask():
 
     }
 
-
     try:
 
         response = requests.post(
@@ -706,24 +696,27 @@ def ask():
             timeout=90
         )
 
-
         if response.status_code != 200:
 
             return jsonify({
 
-                "answer": "API Error: " + response.text
+                "answer":
+                "API Error: "
+                + response.text
 
             })
 
-
         result = response.json()
 
-
-        answer = result["choices"][0]["message"]["content"]
-
+        answer = result[
+            "choices"
+        ][0][
+            "message"
+        ][
+            "content"
+        ]
 
         conn = get_db()
-
 
         conn.execute(
             """
@@ -744,7 +737,6 @@ def ask():
             )
         )
 
-
         conn.execute(
             """
             UPDATE chats
@@ -759,16 +751,13 @@ def ask():
             )
         )
 
-
         conn.commit()
 
         conn.close()
 
-
         return jsonify({
             "answer": answer
         })
-
 
     except Exception as e:
 
@@ -778,16 +767,226 @@ def ask():
 
 
 # ==================================================
+# PUBLIC API - V1
+# ==================================================
+
+@app.route("/v1/chat", methods=["POST"])
+def api_chat():
+
+    # ----------------------------------------------
+    # CHECK CUSTOMER API KEY
+    # ----------------------------------------------
+
+    authorization = request.headers.get(
+        "Authorization",
+        ""
+    )
+
+    expected_key = (
+        "Bearer "
+        + (CUSTOMER_API_KEY or "")
+    )
+
+    if (
+        not CUSTOMER_API_KEY
+        or authorization != expected_key
+    ):
+
+        return jsonify({
+            "error": "Invalid API key"
+        }), 401
+
+    # ----------------------------------------------
+    # READ REQUEST
+    # ----------------------------------------------
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    question = data.get(
+        "message",
+        ""
+    )
+
+    if not isinstance(question, str):
+
+        return jsonify({
+            "error": "message must be a string"
+        }), 400
+
+    question = question.strip()
+
+    if not question:
+
+        return jsonify({
+            "error": "message is required"
+        }), 400
+
+    # ----------------------------------------------
+    # CHECK GROQ
+    # ----------------------------------------------
+
+    if not GROQ_API_KEY:
+
+        return jsonify({
+            "error": "AI provider is not configured"
+        }), 500
+
+    # ----------------------------------------------
+    # AI MESSAGES
+    # ----------------------------------------------
+
+    messages = [
+
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT
+        },
+
+        {
+            "role": "user",
+            "content": question
+        }
+
+    ]
+
+    # ----------------------------------------------
+    # GROQ REQUEST
+    # ----------------------------------------------
+
+    headers = {
+
+        "Authorization":
+        f"Bearer {GROQ_API_KEY}",
+
+        "Content-Type":
+        "application/json"
+
+    }
+
+    payload = {
+
+        "model": MODEL_TEXT,
+
+        "messages": messages,
+
+        "temperature": 0.7,
+
+        "max_tokens": 2048
+
+    }
+
+    try:
+
+        response = requests.post(
+
+            GROQ_URL,
+
+            headers=headers,
+
+            json=payload,
+
+            timeout=90
+
+        )
+
+        # ------------------------------------------
+        # GROQ ERROR
+        # ------------------------------------------
+
+        if response.status_code != 200:
+
+            return jsonify({
+
+                "error":
+                "AI provider error",
+
+                "provider_status":
+                response.status_code
+
+            }), 502
+
+        # ------------------------------------------
+        # READ RESPONSE
+        # ------------------------------------------
+
+        result = response.json()
+
+        answer = result[
+            "choices"
+        ][0][
+            "message"
+        ][
+            "content"
+        ]
+
+        # ------------------------------------------
+        # RETURN TO CUSTOMER
+        # ------------------------------------------
+
+        return jsonify({
+
+            "answer": answer
+
+        })
+
+    except requests.RequestException:
+
+        return jsonify({
+
+            "error":
+            "AI provider connection failed"
+
+        }), 502
+
+    except Exception:
+
+        return jsonify({
+
+            "error":
+            "Internal server error"
+
+        }), 500
+
+
+# ==================================================
+# API HEALTH CHECK
+# ==================================================
+
+@app.route("/v1/health", methods=["GET"])
+def api_health():
+
+    return jsonify({
+
+        "status": "online",
+
+        "service": "ChatXON Mind API",
+
+        "version": "v1"
+
+    })
+
+
+# ==================================================
 # START SERVER
 # ==================================================
 
 if __name__ == "__main__":
 
-    port = int(os.environ.get("PORT", 5000))
-
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
 
     app.run(
+
         host="0.0.0.0",
+
         port=port,
+
         debug=False
+
     )
