@@ -1,8 +1,10 @@
 import os
 import sqlite3
 import uuid
+import secrets
+import hashlib
 
-from datetime import datetime
+from datetime import datetime, date
 
 from flask import Flask, jsonify, render_template_string, request
 import requests
@@ -12,32 +14,40 @@ app = Flask(__name__)
 
 
 # ==================================================
-# GROQ SETTINGS
+# API / GROQ SETTINGS
 # ==================================================
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# Customer API key
-# This key will be stored in Render Environment Variables.
-CUSTOMER_API_KEY = os.environ.get("CUSTOMER_API_KEY")
+# Admin key:
+# Render Environment Variable में इसे रखना है.
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-
-# Text-only model
 MODEL_TEXT = "openai/gpt-oss-20b"
 
-# Vision / multimodal model
 MODEL_VISION = "qwen/qwen3.8-27b"
 
 MODEL = MODEL_TEXT
 
 
 # ==================================================
+# API LIMIT
+# ==================================================
+
+# एक customer key से एक दिन में maximum requests
+DAILY_REQUEST_LIMIT = 100
+
+
+# ==================================================
 # DATABASE
 # ==================================================
 
-DATABASE = os.environ.get("DATABASE_PATH", "chatxon.db")
+DATABASE = os.environ.get(
+    "DATABASE_PATH",
+    "chatxon.db"
+)
 
 
 def get_db():
@@ -46,10 +56,16 @@ def get_db():
 
     conn.row_factory = sqlite3.Row
 
-    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute(
+        "PRAGMA foreign_keys = ON"
+    )
 
     return conn
 
+
+# ==================================================
+# DATABASE INITIALIZATION
+# ==================================================
 
 def init_database():
 
@@ -103,6 +119,50 @@ def init_database():
     """)
 
     # ----------------------------------------------
+    # API KEYS
+    # ----------------------------------------------
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            key_id TEXT UNIQUE NOT NULL,
+
+            key_hash TEXT UNIQUE NOT NULL,
+
+            name TEXT NOT NULL,
+
+            active INTEGER NOT NULL DEFAULT 1,
+
+            total_requests INTEGER NOT NULL DEFAULT 0,
+
+            created_at TEXT NOT NULL,
+
+            last_used_at TEXT
+        )
+    """)
+
+    # ----------------------------------------------
+    # API REQUEST LOG
+    # ----------------------------------------------
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS api_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            key_id TEXT NOT NULL,
+
+            request_date TEXT NOT NULL,
+
+            created_at TEXT NOT NULL,
+
+            FOREIGN KEY (key_id)
+            REFERENCES api_keys(key_id)
+            ON DELETE CASCADE
+        )
+    """)
+
+    # ----------------------------------------------
     # INDEXES
     # ----------------------------------------------
 
@@ -116,12 +176,21 @@ def init_database():
         ON messages(chat_id)
     """)
 
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_api_key_hash
+        ON api_keys(key_hash)
+    """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_api_usage_key_date
+        ON api_usage(key_id, request_date)
+    """)
+
     conn.commit()
 
     conn.close()
 
 
-# Initialize database
 init_database()
 
 
@@ -167,7 +236,9 @@ Very Important Rules:
 
 def get_current_time():
 
-    return datetime.now().strftime("%d %b • %I:%M %p")
+    return datetime.now().strftime(
+        "%d %b • %I:%M %p"
+    )
 
 
 # ==================================================
@@ -177,13 +248,16 @@ def get_current_time():
 def ensure_user(user_id):
 
     if not user_id:
-
         return False
 
     conn = get_db()
 
     existing = conn.execute(
-        "SELECT user_id FROM users WHERE user_id = ?",
+        """
+        SELECT user_id
+        FROM users
+        WHERE user_id = ?
+        """,
         (user_id,)
     ).fetchone()
 
@@ -191,7 +265,11 @@ def ensure_user(user_id):
 
         conn.execute(
             """
-            INSERT INTO users (user_id, created_at)
+            INSERT INTO users
+            (
+                user_id,
+                created_at
+            )
             VALUES (?, ?)
             """,
             (
@@ -214,7 +292,9 @@ def ensure_user(user_id):
 def get_html():
 
     path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
+        os.path.dirname(
+            os.path.abspath(__file__)
+        ),
         "template.html"
     )
 
@@ -240,10 +320,13 @@ def home():
 
 
 # ==================================================
-# GET ALL CHATS OF ONE USER
+# GET CHATS
 # ==================================================
 
-@app.route("/get_chats", methods=["POST"])
+@app.route(
+    "/get_chats",
+    methods=["POST"]
+)
 def get_chats():
 
     data = request.get_json() or {}
@@ -296,7 +379,10 @@ def get_chats():
 # GET ONE CHAT
 # ==================================================
 
-@app.route("/get_chat", methods=["POST"])
+@app.route(
+    "/get_chat",
+    methods=["POST"]
+)
 def get_chat():
 
     data = request.get_json() or {}
@@ -336,7 +422,9 @@ def get_chat():
 
     rows = conn.execute(
         """
-        SELECT role, content
+        SELECT
+            role,
+            content
         FROM messages
         WHERE chat_id = ?
         ORDER BY id ASC
@@ -366,7 +454,10 @@ def get_chat():
 # NEW CHAT
 # ==================================================
 
-@app.route("/new_chat", methods=["POST"])
+@app.route(
+    "/new_chat",
+    methods=["POST"]
+)
 def new_chat():
 
     data = request.get_json() or {}
@@ -440,7 +531,10 @@ def new_chat():
 # ASK AI
 # ==================================================
 
-@app.route("/ask", methods=["POST"])
+@app.route(
+    "/ask",
+    methods=["POST"]
+)
 def ask():
 
     data = request.get_json() or {}
@@ -450,18 +544,22 @@ def ask():
         ""
     ).strip()
 
-    user_id = data.get("user_id")
+    user_id = data.get(
+        "user_id"
+    )
 
-    chat_id = data.get("chat_id")
+    chat_id = data.get(
+        "chat_id"
+    )
 
-    # Optional images
-    images = data.get("images") or []
+    images = data.get(
+        "images"
+    ) or []
 
     if not isinstance(images, list):
 
         images = []
 
-    # Keep maximum 3 images
     images = [
         img
         for img in images
@@ -472,7 +570,8 @@ def ask():
     if not question and not images:
 
         return jsonify({
-            "answer": "Please type something or attach an image."
+            "answer":
+            "Please type something or attach an image."
         })
 
     if not user_id or not chat_id:
@@ -484,7 +583,8 @@ def ask():
     if not GROQ_API_KEY:
 
         return jsonify({
-            "answer": "API key not configured."
+            "answer":
+            "API key not configured."
         })
 
     ensure_user(user_id)
@@ -516,7 +616,9 @@ def ask():
 
     rows = conn.execute(
         """
-        SELECT role, content
+        SELECT
+            role,
+            content
         FROM messages
         WHERE chat_id = ?
         ORDER BY id ASC
@@ -537,7 +639,6 @@ def ask():
 
     now = get_current_time()
 
-    # Store text in database
     store_content = question
 
     if images:
@@ -583,7 +684,8 @@ def ask():
         conn.execute(
             """
             UPDATE chats
-            SET title = ?,
+            SET
+                title = ?,
                 updated_at = ?
             WHERE chat_id = ?
             AND user_id = ?
@@ -606,7 +708,7 @@ def ask():
             AND user_id = ?
             """,
             (
-                get_current_time(),
+                now,
                 chat_id,
                 user_id
             )
@@ -617,7 +719,7 @@ def ask():
     conn.close()
 
     # ----------------------------------------------
-    # BUILD API MESSAGE
+    # IMAGE REQUEST
     # ----------------------------------------------
 
     if images:
@@ -635,7 +737,8 @@ def ask():
 
             content_parts.append({
                 "type": "text",
-                "text": "Please look at the attached image(s) and help me."
+                "text":
+                "Please look at the attached image(s) and help me."
             })
 
         for img_data in images:
@@ -669,9 +772,11 @@ def ask():
 
     headers = {
 
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization":
+        f"Bearer {GROQ_API_KEY}",
 
-        "Content-Type": "application/json"
+        "Content-Type":
+        "application/json"
 
     }
 
@@ -762,42 +867,221 @@ def ask():
     except Exception as e:
 
         return jsonify({
-            "answer": "Server error: " + str(e)
+            "answer":
+            "Server error: " + str(e)
         })
 
 
 # ==================================================
-# PUBLIC API - V1
+# API KEY HASH
 # ==================================================
 
-@app.route("/v1/chat", methods=["POST"])
-def api_chat():
+def hash_api_key(api_key):
 
-    # ----------------------------------------------
-    # CHECK CUSTOMER API KEY
-    # ----------------------------------------------
+    return hashlib.sha256(
+        api_key.encode("utf-8")
+    ).hexdigest()
+
+
+# ==================================================
+# FIND API KEY
+# ==================================================
+
+def find_api_key(api_key):
+
+    if not api_key:
+
+        return None
+
+    key_hash = hash_api_key(
+        api_key
+    )
+
+    conn = get_db()
+
+    row = conn.execute(
+        """
+        SELECT *
+        FROM api_keys
+        WHERE key_hash = ?
+        AND active = 1
+        """,
+        (key_hash,)
+    ).fetchone()
+
+    conn.close()
+
+    return row
+
+
+# ==================================================
+# CHECK API AUTHENTICATION
+# ==================================================
+
+def get_customer_api_key():
 
     authorization = request.headers.get(
         "Authorization",
         ""
     )
 
-    expected_key = (
+    if not authorization.startswith(
         "Bearer "
-        + (CUSTOMER_API_KEY or "")
-    )
-
-    if (
-        not CUSTOMER_API_KEY
-        or authorization != expected_key
     ):
 
+        return None
+
+    api_key = authorization[
+        7:
+    ].strip()
+
+    if not api_key:
+
+        return None
+
+    return api_key
+
+
+# ==================================================
+# CHECK DAILY LIMIT
+# ==================================================
+
+def check_daily_limit(
+    key_id
+):
+
+    today = date.today().isoformat()
+
+    conn = get_db()
+
+    row = conn.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM api_usage
+        WHERE key_id = ?
+        AND request_date = ?
+        """,
+        (
+            key_id,
+            today
+        )
+    ).fetchone()
+
+    conn.close()
+
+    return row["total"] < DAILY_REQUEST_LIMIT
+
+
+# ==================================================
+# RECORD API USAGE
+# ==================================================
+
+def record_api_usage(
+    key_id
+):
+
+    now = get_current_time()
+
+    today = date.today().isoformat()
+
+    conn = get_db()
+
+    conn.execute(
+        """
+        INSERT INTO api_usage
+        (
+            key_id,
+            request_date,
+            created_at
+        )
+        VALUES (?, ?, ?)
+        """,
+        (
+            key_id,
+            today,
+            now
+        )
+    )
+
+    conn.execute(
+        """
+        UPDATE api_keys
+        SET
+            total_requests =
+            total_requests + 1,
+
+            last_used_at = ?
+        WHERE key_id = ?
+        """,
+        (
+            now,
+            key_id
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+
+# ==================================================
+# PUBLIC API V1
+# ==================================================
+
+@app.route(
+    "/v1/chat",
+    methods=["POST"]
+)
+def api_chat():
+
+    # ----------------------------------------------
+    # GET CUSTOMER KEY
+    # ----------------------------------------------
+
+    customer_key = get_customer_api_key()
+
+    if not customer_key:
+
         return jsonify({
-            "error": "Invalid API key"
+            "error":
+            "API key required"
         }), 401
 
     # ----------------------------------------------
-    # READ REQUEST
+    # FIND CUSTOMER
+    # ----------------------------------------------
+
+    api_key_row = find_api_key(
+        customer_key
+    )
+
+    if not api_key_row:
+
+        return jsonify({
+            "error":
+            "Invalid or inactive API key"
+        }), 401
+
+    # ----------------------------------------------
+    # DAILY LIMIT
+    # ----------------------------------------------
+
+    if not check_daily_limit(
+        api_key_row["key_id"]
+    ):
+
+        return jsonify({
+
+            "error":
+            "Daily request limit reached",
+
+            "limit":
+            DAILY_REQUEST_LIMIT
+
+        }), 429
+
+    # ----------------------------------------------
+    # REQUEST DATA
     # ----------------------------------------------
 
     data = request.get_json(
@@ -809,10 +1093,14 @@ def api_chat():
         ""
     )
 
-    if not isinstance(question, str):
+    if not isinstance(
+        question,
+        str
+    ):
 
         return jsonify({
-            "error": "message must be a string"
+            "error":
+            "message must be a string"
         }), 400
 
     question = question.strip()
@@ -820,17 +1108,19 @@ def api_chat():
     if not question:
 
         return jsonify({
-            "error": "message is required"
+            "error":
+            "message is required"
         }), 400
 
     # ----------------------------------------------
-    # CHECK GROQ
+    # GROQ CHECK
     # ----------------------------------------------
 
     if not GROQ_API_KEY:
 
         return jsonify({
-            "error": "AI provider is not configured"
+            "error":
+            "AI provider is not configured"
         }), 500
 
     # ----------------------------------------------
@@ -851,10 +1141,6 @@ def api_chat():
 
     ]
 
-    # ----------------------------------------------
-    # GROQ REQUEST
-    # ----------------------------------------------
-
     headers = {
 
         "Authorization":
@@ -867,13 +1153,17 @@ def api_chat():
 
     payload = {
 
-        "model": MODEL_TEXT,
+        "model":
+        MODEL_TEXT,
 
-        "messages": messages,
+        "messages":
+        messages,
 
-        "temperature": 0.7,
+        "temperature":
+        0.7,
 
-        "max_tokens": 2048
+        "max_tokens":
+        2048
 
     }
 
@@ -892,7 +1182,7 @@ def api_chat():
         )
 
         # ------------------------------------------
-        # GROQ ERROR
+        # PROVIDER ERROR
         # ------------------------------------------
 
         if response.status_code != 200:
@@ -908,7 +1198,7 @@ def api_chat():
             }), 502
 
         # ------------------------------------------
-        # READ RESPONSE
+        # READ ANSWER
         # ------------------------------------------
 
         result = response.json()
@@ -922,12 +1212,24 @@ def api_chat():
         ]
 
         # ------------------------------------------
-        # RETURN TO CUSTOMER
+        # SAVE USAGE
+        # ------------------------------------------
+
+        record_api_usage(
+            api_key_row["key_id"]
+        )
+
+        # ------------------------------------------
+        # RESPONSE
         # ------------------------------------------
 
         return jsonify({
 
-            "answer": answer
+            "answer":
+            answer,
+
+            "api_version":
+            "v1"
 
         })
 
@@ -951,19 +1253,246 @@ def api_chat():
 
 
 # ==================================================
-# API HEALTH CHECK
+# CREATE CUSTOMER API KEY
 # ==================================================
 
-@app.route("/v1/health", methods=["GET"])
+@app.route(
+    "/admin/create-key",
+    methods=["POST"]
+)
+def create_customer_key():
+
+    # ----------------------------------------------
+    # ADMIN AUTH
+    # ----------------------------------------------
+
+    authorization = request.headers.get(
+        "Authorization",
+        ""
+    )
+
+    expected = (
+        "Bearer "
+        + (ADMIN_API_KEY or "")
+    )
+
+    if (
+        not ADMIN_API_KEY
+        or authorization != expected
+    ):
+
+        return jsonify({
+            "error":
+            "Unauthorized"
+        }), 401
+
+    # ----------------------------------------------
+    # REQUEST
+    # ----------------------------------------------
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    name = data.get(
+        "name",
+        "Customer"
+    )
+
+    if not isinstance(
+        name,
+        str
+    ):
+
+        name = "Customer"
+
+    name = name.strip()
+
+    if not name:
+
+        name = "Customer"
+
+    # ----------------------------------------------
+    # GENERATE KEY
+    # ----------------------------------------------
+
+    raw_key = (
+        "xgw_live_"
+        + secrets.token_urlsafe(32)
+    )
+
+    key_hash = hash_api_key(
+        raw_key
+    )
+
+    key_id = (
+        "key_"
+        + secrets.token_hex(8)
+    )
+
+    now = get_current_time()
+
+    # ----------------------------------------------
+    # SAVE HASH ONLY
+    # ----------------------------------------------
+
+    conn = get_db()
+
+    conn.execute(
+        """
+        INSERT INTO api_keys
+        (
+            key_id,
+            key_hash,
+            name,
+            active,
+            total_requests,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            key_id,
+            key_hash,
+            name,
+            1,
+            0,
+            now
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    # ----------------------------------------------
+    # RETURN KEY ONCE
+    # ----------------------------------------------
+
+    return jsonify({
+
+        "message":
+        "API key created successfully",
+
+        "key_id":
+        key_id,
+
+        "name":
+        name,
+
+        "api_key":
+        raw_key,
+
+        "daily_limit":
+        DAILY_REQUEST_LIMIT
+
+    })
+
+
+# ==================================================
+# LIST API KEY STATS
+# ==================================================
+
+@app.route(
+    "/admin/keys",
+    methods=["GET"]
+)
+def list_api_keys():
+
+    # ----------------------------------------------
+    # ADMIN AUTH
+    # ----------------------------------------------
+
+    authorization = request.headers.get(
+        "Authorization",
+        ""
+    )
+
+    expected = (
+        "Bearer "
+        + (ADMIN_API_KEY or "")
+    )
+
+    if (
+        not ADMIN_API_KEY
+        or authorization != expected
+    ):
+
+        return jsonify({
+            "error":
+            "Unauthorized"
+        }), 401
+
+    conn = get_db()
+
+    rows = conn.execute(
+        """
+        SELECT
+            key_id,
+            name,
+            active,
+            total_requests,
+            created_at,
+            last_used_at
+        FROM api_keys
+        ORDER BY id DESC
+        """
+    ).fetchall()
+
+    conn.close()
+
+    keys = [
+
+        {
+            "key_id":
+            row["key_id"],
+
+            "name":
+            row["name"],
+
+            "active":
+            bool(row["active"]),
+
+            "total_requests":
+            row["total_requests"],
+
+            "created_at":
+            row["created_at"],
+
+            "last_used_at":
+            row["last_used_at"]
+
+        }
+
+        for row in rows
+
+    ]
+
+    return jsonify({
+        "keys": keys
+    })
+
+
+# ==================================================
+# API HEALTH
+# ==================================================
+
+@app.route(
+    "/v1/health",
+    methods=["GET"]
+)
 def api_health():
 
     return jsonify({
 
-        "status": "online",
+        "status":
+        "online",
 
-        "service": "ChatXON Mind API",
+        "service":
+        "ChatXON Mind API",
 
-        "version": "v1"
+        "version":
+        "v1"
 
     })
 
