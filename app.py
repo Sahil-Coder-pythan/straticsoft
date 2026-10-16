@@ -167,78 +167,28 @@ init_database()
 
 
 # ==================================================
-# SYSTEM PROMPT
+# SYSTEM PROMPT  (Gemini style clean answers)
 # ==================================================
 
 SYSTEM_PROMPT = """
-You are ChatXON Mind Version 1.
-
-Your name is ChatXON Mind.
-You are the AI assistant developed by Sahil for the ChatXON Mind project.
+You are ChatXON Mind, a helpful AI assistant developed by Sahil for StratisSoft.
 
 Identity:
-Creator: Sahil
-Creation Date: 26 September 2026
-Place: Uttarakhand
-Project: ChatXON Mind
-Company: StratisSoft
-Founder and CEO: Sahil
-Number of Founders: 1
+- Creator: Sahil
+- Company: StratisSoft
+- You are not ChatGPT or made by OpenAI.
 
-Technology:
-You use the Groq API/model configured by your developer.
-Never claim that Sahil created the Groq model.
-You can understand images attached by users.
-
-IMPORTANT RESPONSE STYLE:
-
-Write answers in a clean, professional and natural conversational style similar to a modern AI assistant.
-
-Never use Markdown formatting.
-
-NEVER use stars for bold or italic formatting.
-Do not use asterisks in normal answers.
-
-Never write names by separating letters with hyphens.
-Always write Sahil, never S-A-H-I-L.
-
-Do not use unnecessary brackets, square brackets or parentheses.
-Use brackets only when they are genuinely necessary for meaning, technical information, formulas or other important context.
-
-Do not use Markdown headings.
-
-Do not use Markdown bullet points beginning with a star or hyphen.
-When a list is useful, use the clean bullet symbol •.
-
-Use short paragraphs with good spacing.
-
-Use numbered points only when explaining steps or a sequence.
-
-Use emojis naturally and sparingly.
-Usually use zero to three relevant emojis in an answer.
-Do not put emojis everywhere.
-Use an emoji only when it improves readability, emphasis or friendliness.
-
-Keep spelling correct.
-Keep names, places, people, companies, dates and technical terms correctly spelled.
-Never intentionally separate letters of a name.
-
-Answer the user's actual question directly.
-Do not add unnecessary information.
-
-For explanations, make the answer easy to understand.
-For factual questions, give accurate information.
-If you are not certain about a fact, do not confidently invent it.
-
-Reply in the same language or natural language style used by the user.
-If the user writes Hindi, reply naturally in Hindi or Hinglish.
-If the user writes English, reply naturally in English.
-
-Never identify yourself as ChatGPT.
-Never claim that you are made by OpenAI.
-
-Your writing should look clean, readable and professional, like a polished modern AI assistant response.
+Response style (very important):
+- Reply in the same language the user is using (Hindi, English or natural Hinglish).
+- Write clean, natural and easy to read answers.
+- Prefer short paragraphs and clear structure.
+- When listing points, use simple bullet points with • 
+- Do not use markdown stars (**bold**), code blocks or heavy formatting unless truly needed.
+- Keep answers accurate, direct and helpful.
+- Be friendly but professional.
+- Never invent facts. If unsure, say so politely.
 """
+
 
 # ==================================================
 # CLEAN AI RESPONSE
@@ -259,7 +209,6 @@ def clean_ai_answer(text):
     text = re.sub(r"(?m)^\s*[-•]\s+", "• ", text)
 
     # Keep normal brackets when they are meaningful.
-    # Only remove repeated empty brackets.
     text = re.sub(r"\(\s*\)", "", text)
     text = re.sub(r"\[\s*\]", "", text)
 
@@ -268,7 +217,6 @@ def clean_ai_answer(text):
     text = re.sub(r"\n{3,}", "\n\n", text)
 
     return text.strip()
-
 
 
 # ==================================================
@@ -790,8 +738,6 @@ def ask():
         })
 
         use_model = MODEL_VISION
-
-        # Vision limit
         max_out_tokens = 800
 
     else:
@@ -802,8 +748,6 @@ def ask():
         })
 
         use_model = MODEL_TEXT
-
-        # Reduced from 2048 to reduce token usage
         max_out_tokens = 1024
 
 
@@ -942,20 +886,12 @@ def ask():
 # ==================================================
 
 
-# ==================================================
-# HASH CUSTOMER KEY
-# ==================================================
-
 def hash_customer_key(api_key):
 
     return hashlib.sha256(
         api_key.encode("utf-8")
     ).hexdigest()
 
-
-# ==================================================
-# GENERATE CUSTOMER KEY
-# ==================================================
 
 def generate_customer_key():
 
@@ -964,10 +900,6 @@ def generate_customer_key():
         + secrets.token_urlsafe(32)
     )
 
-
-# ==================================================
-# CHECK ADMIN
-# ==================================================
 
 def check_admin():
 
@@ -985,10 +917,6 @@ def check_admin():
         ADMIN_API_KEY
     )
 
-
-# ==================================================
-# CREATE CUSTOMER KEY
-# ==================================================
 
 def create_customer_key(daily_limit):
 
@@ -1043,19 +971,13 @@ def create_customer_key(daily_limit):
         return new_key
 
 
-# ==================================================
-# AUTHENTICATE CUSTOMER
-# ==================================================
-
 def authenticate_customer():
 
-    # Support X-API-Key
     customer_key = request.headers.get(
         "X-API-Key",
         ""
     ).strip()
 
-    # Also support Authorization Bearer
     if not customer_key:
 
         authorization = request.headers.get(
@@ -1097,10 +1019,6 @@ def authenticate_customer():
     return row
 
 
-# ==================================================
-# GET CUSTOMER USAGE
-# ==================================================
-
 def get_customer_usage(key_id):
 
     today = date.today().isoformat()
@@ -1129,13 +1047,8 @@ def get_customer_usage(key_id):
     return row["requests"]
 
 
-# ==================================================
-# RECORD CUSTOMER USAGE
-# ==================================================
-
 def record_customer_usage(key_id):
 
-    # Correct method:
     today = date.today().isoformat()
 
     conn = get_db()
@@ -1165,10 +1078,6 @@ def record_customer_usage(key_id):
     conn.close()
 
 
-# ==================================================
-# CHECK CUSTOMER LIMIT
-# ==================================================
-
 def check_customer_limit(key):
 
     used = get_customer_usage(
@@ -1179,10 +1088,6 @@ def check_customer_limit(key):
 
     return used < limit
 
-
-# ==================================================
-# ADMIN: GENERATE KEY
-# ==================================================
 
 @app.route(
     "/admin/generate-key",
@@ -1233,10 +1138,6 @@ def admin_generate_key():
         "Save this API key securely. The raw key is shown only once."
     })
 
-
-# ==================================================
-# ADMIN: LIST KEYS
-# ==================================================
 
 @app.route(
     "/admin/keys",
@@ -1295,10 +1196,6 @@ def admin_keys():
         "keys": result
     })
 
-
-# ==================================================
-# ADMIN: CHANGE DAILY LIMIT
-# ==================================================
 
 @app.route(
     "/admin/key/<int:key_id>/limit",
@@ -1376,10 +1273,6 @@ def admin_change_limit(key_id):
     })
 
 
-# ==================================================
-# ADMIN: REVOKE KEY
-# ==================================================
-
 @app.route(
     "/admin/key/<int:key_id>/revoke",
     methods=["POST"]
@@ -1422,10 +1315,6 @@ def admin_revoke_key(key_id):
     })
 
 
-# ==================================================
-# CUSTOMER API STATUS
-# ==================================================
-
 @app.route(
     "/v1/status",
     methods=["GET"]
@@ -1461,10 +1350,6 @@ def customer_status():
     })
 
 
-# ==================================================
-# CUSTOMER API CHAT
-# ==================================================
-
 @app.route(
     "/v1/chat",
     methods=["POST"]
@@ -1480,7 +1365,6 @@ def customer_chat():
             "Invalid or missing API key"
         }), 401
 
-    # Check daily limit
     if not check_customer_limit(key):
 
         used = get_customer_usage(
@@ -1526,7 +1410,6 @@ def customer_chat():
 
         images = []
 
-    # Maximum 3 images
     images = [
         img
         for img in images
@@ -1542,10 +1425,6 @@ def customer_chat():
             "error":
             "Please provide question or images."
         }), 400
-
-    # ----------------------------------------------
-    # Build messages
-    # ----------------------------------------------
 
     messages = [
         {
@@ -1588,7 +1467,6 @@ def customer_chat():
         })
 
         use_model = MODEL_VISION
-
         max_out_tokens = 800
 
     else:
@@ -1599,12 +1477,7 @@ def customer_chat():
         })
 
         use_model = MODEL_TEXT
-
         max_out_tokens = 1024
-
-    # ----------------------------------------------
-    # Groq request
-    # ----------------------------------------------
 
     headers = {
         "Authorization":
@@ -1637,7 +1510,6 @@ def customer_chat():
             timeout=90
         )
 
-        # Do not count failed API requests
         if response.status_code != 200:
 
             return jsonify({
@@ -1677,10 +1549,6 @@ def customer_chat():
                 "error":
                 "AI returned an empty response."
             }), 502
-
-        # ------------------------------------------
-        # Count successful request
-        # ------------------------------------------
 
         record_customer_usage(
             key["id"]
