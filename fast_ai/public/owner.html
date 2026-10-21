@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aapka AI — Owner · Company Links</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>body{font-family:Inter,system-ui,sans-serif;background:#f8fafc}</style>
+</head>
+<body class="min-h-screen text-gray-900">
+<header class="bg-white border-b px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
+  <div class="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold">A</div>
+  <div>
+    <div class="font-semibold text-sm">Aapka AI · Owner</div>
+    <div class="text-[10px] text-gray-500">हर कंपनी के अलग Tool + Customer लिंक</div>
+  </div>
+  <a href="/" class="ml-auto text-xs text-indigo-600 font-medium">Console →</a>
+</header>
+
+<main class="max-w-2xl mx-auto p-4 space-y-4">
+
+  <!-- How to give to companies -->
+  <section class="bg-indigo-600 text-white rounded-2xl p-4 shadow">
+    <h1 class="font-bold text-lg mb-2">30,000 कंपनियों को क्या देना है?</h1>
+    <ol class="text-sm space-y-2 list-decimal list-inside opacity-95">
+      <li>नीचे <b>कंपनी का नाम</b> डालो → <b>Create</b> दबाओ</li>
+      <li>दो लिंक बनेंगे:
+        <ul class="ml-4 mt-1 list-disc list-inside text-indigo-100">
+          <li><b>Tool link</b> — कंपनी के staff / CEO के लिए (console)</li>
+          <li><b>Customer link</b> — कंपनी अपने ऐप के Help बटन पर लगाए</li>
+        </ul>
+      </li>
+      <li>ये <b>दोनों लिंक सिर्फ उसी कंपनी</b> को भेजो (WhatsApp / email)</li>
+      <li>दूसरी कंपनी = नया Create → नए दो लिंक (मिलेंगे नहीं एक-दूसरे से)</li>
+    </ol>
+    <p class="text-xs mt-3 bg-white/15 rounded-lg px-3 py-2">एक कंपनी का refund / data दूसरी कंपनी के Tool पर <b>नहीं</b> जाएगा।<br>उसी नाम से Create = <b>वही लिंक</b> (Microsoft → हमेशा same)। Data टिके: Render Disk + <code>AAPKA_DATA=/var/data</code>।</p>
+  </section>
+
+  <!-- Create form -->
+  <section class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+    <h2 class="font-semibold text-sm mb-3">नई कंपनी · लिंक बनाओ</h2>
+    <label class="block text-xs text-gray-500 mb-1">कंपनी का नाम</label>
+    <input id="cname" type="text" placeholder="उदा. Zomato Media / MakeMyTrip Support"
+      class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 outline-none">
+    <button type="button" onclick="createCo()" id="btnCreate"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl text-sm">
+      Create Company Links
+    </button>
+    <p id="createMsg" class="text-xs text-gray-500 mt-2"></p>
+  </section>
+
+  <!-- Latest created -->
+  <section id="latestBox" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+    <h2 class="font-semibold text-sm text-emerald-800 mb-2">अभी बने लिंक — कंपनी को ये दो भेजो</h2>
+    <div class="space-y-2 text-sm">
+      <div>
+        <div class="text-[10px] uppercase text-emerald-700 font-medium">1. Tool link (staff / CEO)</div>
+        <div class="flex gap-2 items-center">
+          <input id="outTool" readonly class="flex-1 bg-white border rounded-lg px-2 py-1.5 text-xs font-mono">
+          <button type="button" onclick="copy('outTool')" class="text-xs bg-emerald-600 text-white px-2 py-1.5 rounded-lg">Copy</button>
+        </div>
+      </div>
+      <div>
+        <div class="text-[10px] uppercase text-emerald-700 font-medium">2. Customer link (Help button)</div>
+        <div class="flex gap-2 items-center">
+          <input id="outCust" readonly class="flex-1 bg-white border rounded-lg px-2 py-1.5 text-xs font-mono">
+          <button type="button" onclick="copy('outCust')" class="text-xs bg-emerald-600 text-white px-2 py-1.5 rounded-lg">Copy</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- All companies -->
+  <section class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold text-sm">सभी कंपनियाँ</h2>
+      <button type="button" onclick="loadList()" class="text-xs text-indigo-600">Refresh</button>
+    </div>
+    <div id="list" class="space-y-3 text-sm"></div>
+  </section>
+
+  <!-- 6 dashboards note -->
+  <section class="bg-white rounded-2xl border border-gray-200 p-4 text-sm text-gray-600">
+    <h2 class="font-semibold text-gray-900 mb-2">Tool के अंदर 6 dashboards</h2>
+    <ol class="list-decimal list-inside space-y-1 text-xs">
+      <li><b>Overview</b> — आज के cases / automation summary</li>
+      <li><b>Employee / Agent</b> — inbox, reply, suggested actions</li>
+      <li><b>CEO / ROI</b> — hours saved, cases, cost view</li>
+      <li><b>Integrations</b> — Salesforce / Zendesk / Payment boxes (कंपनी खुद keys डाले)</li>
+      <li><b>History & Audit</b> — उसी कंपनी के refunds / orders (दूसरी कंपनी नहीं दिखेगी)</li>
+      <li><b>Customer portal</b> — अलग Customer link से खुलता है</li>
+    </ol>
+    <p class="text-xs mt-2 text-amber-700 bg-amber-50 rounded-lg px-2 py-1.5">Refund / CRM connect तभी live होगा जब कंपनी Integrations में अपनी keys डाले और Test Connection करे। बिना keys के local demo चलता है।</p>
+  </section>
+
+</main>
+
+<script>
+const BASE = location.origin;
+async function createCo() {
+  const name = (document.getElementById('cname').value || '').trim();
+  if (!name) { document.getElementById('createMsg').textContent = 'कंपनी का नाम लिखो'; return; }
+  document.getElementById('btnCreate').disabled = true;
+  document.getElementById('createMsg').textContent = 'बना रहा है…';
+  try {
+    const r = await fetch('/api/company/create', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'failed');
+    document.getElementById('latestBox').classList.remove('hidden');
+    document.getElementById('outTool').value = d.tool_link || (BASE + d.tool_path);
+    document.getElementById('outCust').value = d.customer_link || (BASE + d.customer_path);
+    document.getElementById('createMsg').textContent = 'हो गया — नीचे दोनों लिंक Copy करके कंपनी को भेजो';
+    document.getElementById('cname').value = '';
+    loadList();
+  } catch (e) {
+    document.getElementById('createMsg').textContent = 'Error: ' + e.message;
+  }
+  document.getElementById('btnCreate').disabled = false;
+}
+function copy(id) {
+  const el = document.getElementById(id);
+  el.select();
+  navigator.clipboard.writeText(el.value).catch(()=>{});
+}
+async function loadList() {
+  const box = document.getElementById('list');
+  box.innerHTML = '<p class="text-gray-400 text-xs">Loading…</p>';
+  try {
+    const r = await fetch('/api/company/list');
+    const d = await r.json();
+    const items = d.companies || d.items || [];
+    if (!items.length) {
+      box.innerHTML = '<p class="text-gray-400 text-xs">अभी कोई कंपनी नहीं — ऊपर Create करो</p>';
+      return;
+    }
+    box.innerHTML = items.map(c => {
+      const id = c.id || c.workspace_id || '';
+      const nm = c.name || id;
+      const tool = c.tool_link || (BASE + '/w/' + id);
+      const cust = c.customer_link || (BASE + '/w/' + id + '/customer');
+      return `<div class="border border-gray-100 rounded-xl p-3">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-medium truncate">${esc(nm)}</div>
+            <div class="text-[10px] text-gray-400 font-mono">${esc(id)}</div>
+          </div>
+          <button type="button" onclick="delCo('${esc(id)}')" class="text-xs text-red-600 px-2 py-1 rounded-lg hover:bg-red-50">Delete</button>
+        </div>
+        <div class="mt-2 space-y-1">
+          <div class="flex gap-1 items-center"><span class="text-[10px] w-14 text-gray-500">Tool</span>
+            <input readonly value="${esc(tool)}" class="flex-1 text-[10px] font-mono border rounded px-1 py-0.5 bg-gray-50">
+            <button type="button" class="text-[10px] text-indigo-600" onclick="navigator.clipboard.writeText('${esc(tool)}')">Copy</button></div>
+          <div class="flex gap-1 items-center"><span class="text-[10px] w-14 text-gray-500">Customer</span>
+            <input readonly value="${esc(cust)}" class="flex-1 text-[10px] font-mono border rounded px-1 py-0.5 bg-gray-50">
+            <button type="button" class="text-[10px] text-indigo-600" onclick="navigator.clipboard.writeText('${esc(cust)}')">Copy</button></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<p class="text-red-500 text-xs">' + e.message + '</p>';
+  }
+}
+async function delCo(id) {
+  if (!confirm('Delete company ' + id + '? Links will stop working.')) return;
+  await fetch('/api/company/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
+  loadList();
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+loadList();
+</script>
+</body>
+</html>
