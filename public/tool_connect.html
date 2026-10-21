@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Connect · StraticSoft</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+<header class="bg-white border-b px-4 py-3 flex items-center gap-3">
+  <a href="/" class="text-sm text-indigo-600">← Suite</a>
+  <h1 class="font-semibold">Connect Board</h1>
+</header>
+<main class="max-w-xl mx-auto p-4 space-y-3">
+  <p class="text-sm text-slate-500">Company pastes its own keys. Status updates for this company only.</p>
+  <input id="system" placeholder="System (salesforce, zendesk, razorpay…)" class="w-full rounded-xl border px-3 py-2 text-sm"/>
+  <input id="endpoint" placeholder="Endpoint URL (optional)" class="w-full rounded-xl border px-3 py-2 text-sm"/>
+  <input id="key" placeholder="API key / token" class="w-full rounded-xl border px-3 py-2 text-sm"/>
+  <button onclick="save()" class="w-full rounded-xl bg-teal-600 text-white py-2.5 text-sm">Save connection</button>
+  <div id="list" class="space-y-2"></div>
+</main>
+<script>
+async function load(){
+  const r=await fetch('/api/tools/connect'); const j=await r.json();
+  document.getElementById('list').innerHTML=(j.items||[]).map(x=>`
+    <div class="bg-white border rounded-xl p-3 text-sm flex justify-between">
+      <div><div class="font-medium">${x.system}</div><div class="text-xs text-slate-400">${x.endpoint||''}</div></div>
+      <span class="text-xs font-semibold ${x.status==='CONNECTED'?'text-green-600':'text-amber-600'}">${x.status}</span>
+    </div>`).join('')||'<p class="text-sm text-slate-400">No connections yet</p>';
+}
+async function save(){
+  const r=await fetch('/api/tools/connect',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system:system.value,endpoint:endpoint.value,key:key.value})});
+  const j=await r.json();
+  if(r.ok){system.value=endpoint.value=key.value='';load()} else alert(j.error||'fail');
+}
+load();
+</script>
+</body></html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>StraticSoft — Sign in</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{font-family:Inter,system-ui,sans-serif;background:#f8fafc}
+  .card{box-shadow:0 10px 40px rgba(15,23,42,.08)}
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md card bg-white rounded-2xl border border-slate-200 p-8">
+    <div class="text-center mb-8">
+      <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold text-lg">S</div>
+      <h1 class="mt-4 text-xl font-semibold text-slate-900">StraticSoft</h1>
+      <p class="text-sm text-slate-500 mt-1">Company login · every company has its own account</p>
+    </div>
+
+    <div class="flex rounded-lg bg-slate-100 p-1 mb-6 text-sm">
+      <button type="button" id="tabIn" class="flex-1 py-2 rounded-md bg-white shadow font-medium text-slate-900" onclick="showTab('in')">Sign in</button>
+      <button type="button" id="tabUp" class="flex-1 py-2 rounded-md text-slate-600" onclick="showTab('up')">Register company</button>
+    </div>
+
+    <form id="formIn" onsubmit="return doLogin(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Work email</label>
+        <input id="inEmail" type="email" required autocomplete="username"
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="you@company.com"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Password</label>
+        <input id="inPass" type="password" required autocomplete="current-password" minlength="6"
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="••••••••"/>
+      </div>
+      <p id="errIn" class="text-xs text-red-600 hidden"></p>
+      <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white py-3 text-sm font-semibold">Sign in</button>
+    </form>
+
+    <form id="formUp" onsubmit="return doRegister(event)" class="space-y-4 hidden">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Company name</label>
+        <input id="upCompany" type="text" required
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="Your company"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Your name</label>
+        <input id="upName" type="text"
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="Sahil"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Work email</label>
+        <input id="upEmail" type="email" required autocomplete="username"
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="you@company.com"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Password (min 6)</label>
+        <input id="upPass" type="password" required minlength="6" autocomplete="new-password"
+          class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="••••••••"/>
+      </div>
+      <p id="errUp" class="text-xs text-red-600 hidden"></p>
+      <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white py-3 text-sm font-semibold">Create company account</button>
+    </form>
+
+    <p class="text-[11px] text-slate-400 mt-6 text-center">Each company sees only its own data. No shared admin password.</p>
+  </div>
+<script>
+function showTab(t){
+  const inn=t==='in';
+  document.getElementById('formIn').classList.toggle('hidden',!inn);
+  document.getElementById('formUp').classList.toggle('hidden',inn);
+  document.getElementById('tabIn').className=inn?'flex-1 py-2 rounded-md bg-white shadow font-medium text-slate-900':'flex-1 py-2 rounded-md text-slate-600';
+  document.getElementById('tabUp').className=!inn?'flex-1 py-2 rounded-md bg-white shadow font-medium text-slate-900':'flex-1 py-2 rounded-md text-slate-600';
+}
+async function doLogin(e){
+  e.preventDefault();
+  const err=document.getElementById('errIn'); err.classList.add('hidden');
+  const email=document.getElementById('inEmail').value.trim();
+  const password=document.getElementById('inPass').value;
+  try{
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const j=await r.json();
+    if(!r.ok){err.textContent=j.error||'Login failed';err.classList.remove('hidden');return false}
+    location.href=new URLSearchParams(location.search).get('next')||'/';
+  }catch(x){err.textContent='Network error';err.classList.remove('hidden')}
+  return false;
+}
+async function doRegister(e){
+  e.preventDefault();
+  const err=document.getElementById('errUp'); err.classList.add('hidden');
+  const body={
+    company:document.getElementById('upCompany').value.trim(),
+    name:document.getElementById('upName').value.trim(),
+    email:document.getElementById('upEmail').value.trim(),
+    password:document.getElementById('upPass').value
+  };
+  try{
+    const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!r.ok){err.textContent=j.error||'Register failed';err.classList.remove('hidden');return false}
+    location.href='/';
+  }catch(x){err.textContent='Network error';err.classList.remove('hidden')}
+  return false;
+}
+</script>
+</body>
+</html>
