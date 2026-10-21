@@ -1,0 +1,24 @@
+Flask==3.0.3
+Werkzeug==3.0.3
+pymongo>=4.6.0
+# Resolle
+# Forge
+requests>=2.31
+cryptography>=42.0
+google-auth>=2.29
+psycopg2-binary>=2.9
+# Router (FastAPI)
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+httpx
+pydantic
+jinja2
+python-multipart
+psycopg[binary]
+slowapi
+authlib
+itsdangerous
+bcrypt
+a2wsgi>=1.10.0

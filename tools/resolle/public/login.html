@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aapka AI · Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  body {
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    background: linear-gradient(160deg, #eef2ff 0%, #f8fafc 40%, #faf5ff 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    width: 100%; max-width: 380px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px 24px;
+  }
+  .logo {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    color: #fff; font-weight: 700; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-primary {
+    width: 100%; border: none; border-radius: 12px;
+    padding: 12px; font-weight: 600; font-size: 14px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    color: #fff; cursor: pointer;
+  }
+  .btn-primary:disabled { opacity: 0.7; cursor: wait; }
+  .btn-google {
+    width: 100%; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 11px; font-size: 14px; background: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  input {
+    width: 100%; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 11px 14px; font-size: 14px; outline: none;
+    box-sizing: border-box;
+  }
+  input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+  .hidden { display: none !important; }
+  .code-box {
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .code-box input {
+    width: 40px; height: 48px; text-align: center; font-size: 18px; font-weight: 600;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+
+  <!-- LOGIN -->
+  <div id="viewLogin">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-weight:700;font-size:15px;color:#0f172a">Aapka AI</div>
+        <div style="font-size:10px;letter-spacing:0.06em;color:#94a3b8;text-transform:uppercase">Stratic Soft · AI Infrastructure</div>
+      </div>
+    </div>
+    <h1 style="font-size:22px;font-weight:700;margin:0 0 4px;color:#0f172a">Welcome back</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 20px">Log in to your account to continue.</p>
+
+    <button type="button" class="btn-google" id="btnGoogle" onclick="startGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.3 35.1 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.5-6.6 6.9l.1.1 6.3 5.3C36.9 41.7 44 36 44 24c0-1.3-.1-2.5-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:#94a3b8;font-size:12px">
+      <div style="flex:1;height:1px;background:#e5e7eb"></div>
+      OR
+      <div style="flex:1;height:1px;background:#e5e7eb"></div>
+    </div>
+
+    <form onsubmit="return doLogin(event)" style="display:flex;flex-direction:column;gap:12px">
+      <input id="loginEmail" type="email" required placeholder="Email address" autocomplete="username">
+      <div style="position:relative">
+        <input id="loginPass" type="password" required placeholder="Password" autocomplete="current-password">
+      </div>
+      <div style="text-align:right">
+        <button type="button" onclick="showForgot()" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer;font-weight:500">Forgot password?</button>
+      </div>
+      <p id="loginErr" style="color:#dc2626;font-size:12px;margin:0" class="hidden"></p>
+      <button type="submit" class="btn-primary" id="btnLogin">Log in</button>
+    </form>
+    <p style="text-align:center;font-size:12px;color:#64748b;margin-top:16px">
+      Don't have an account? <button type="button" onclick="showSignup()" style="background:none;border:none;color:#6366f1;font-weight:600;cursor:pointer">Sign up</button>
+    </p>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="viewSignup" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Aapka AI</div>
+        <div style="font-size:10px;letter-spacing:0.06em;color:#94a3b8;text-transform:uppercase">Stratic Soft · AI Infrastructure</div>
+      </div>
+    </div>
+    <h1 style="font-size:20px;font-weight:700;margin:0 0 4px">Create account</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px">Same email later = same data.</p>
+    <form onsubmit="return doSignup(event)" style="display:flex;flex-direction:column;gap:12px">
+      <input id="suName" type="text" placeholder="Your name">
+      <input id="suEmail" type="email" required placeholder="Email address">
+      <input id="suPass" type="password" required minlength="6" placeholder="Password (min 6)">
+      <p id="suErr" style="color:#dc2626;font-size:12px;margin:0" class="hidden"></p>
+      <button type="submit" class="btn-primary">Sign up</button>
+    </form>
+    <p style="text-align:center;margin-top:14px"><button type="button" onclick="showLogin()" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer">← Back to log in</button></p>
+  </div>
+
+  <!-- FORGOT -->
+  <div id="viewForgot" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Aapka AI</div>
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Stratic Soft · AI Infrastructure</div>
+      </div>
+    </div>
+    <h1 style="font-size:20px;font-weight:700;margin:0 0 4px">Reset your password</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px">Enter your email and we will send a verification code.</p>
+    <form onsubmit="return doForgot(event)" style="display:flex;flex-direction:column;gap:12px">
+      <input id="fgEmail" type="email" required placeholder="Email address">
+      <p id="fgMsg" style="font-size:12px;color:#64748b;margin:0" class="hidden"></p>
+      <button type="submit" class="btn-primary">Send verification code</button>
+    </form>
+    <p style="text-align:center;margin-top:14px"><button type="button" onclick="showLogin()" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer">← Back to log in</button></p>
+  </div>
+
+  <!-- VERIFY CODE -->
+  <div id="viewCode" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Aapka AI</div>
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Stratic Soft · AI Infrastructure</div>
+      </div>
+    </div>
+    <h1 style="font-size:20px;font-weight:700;margin:0 0 4px">Check your email</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px" id="codeHint">We sent a 6-digit code. It expires in 10 minutes.</p>
+    <form onsubmit="return doVerify(event)" style="display:flex;flex-direction:column;gap:12px">
+      <input id="codeInput" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" style="text-align:center;letter-spacing:0.3em;font-size:20px;font-weight:600">
+      <p id="codeErr" style="color:#dc2626;font-size:12px;margin:0" class="hidden"></p>
+      <button type="submit" class="btn-primary">Verify</button>
+    </form>
+    <p style="text-align:center;margin-top:14px"><button type="button" onclick="showLogin()" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer">← Back to log in</button></p>
+  </div>
+
+  <!-- NEW PASSWORD -->
+  <div id="viewNewPass" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-weight:700;font-size:15px">Aapka AI</div>
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Stratic Soft · AI Infrastructure</div>
+      </div>
+    </div>
+    <h1 style="font-size:20px;font-weight:700;margin:0 0 4px">Create new password</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px">Choose a new password for your account.</p>
+    <form onsubmit="return doNewPass(event)" style="display:flex;flex-direction:column;gap:12px">
+      <input id="np1" type="password" required minlength="6" placeholder="New password">
+      <input id="np2" type="password" required minlength="6" placeholder="Confirm new password">
+      <p id="npErr" style="color:#dc2626;font-size:12px;margin:0" class="hidden"></p>
+      <button type="submit" class="btn-primary">Save new password</button>
+    </form>
+  </div>
+</div>
+
+<script>
+let resetEmail = '';
+let resetCode = '';
+let googleClientId = '';
+
+function hideAll() {
+  ['viewLogin','viewSignup','viewForgot','viewCode','viewNewPass'].forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+function showLogin() { hideAll(); document.getElementById('viewLogin').classList.remove('hidden'); }
+function showSignup() { hideAll(); document.getElementById('viewSignup').classList.remove('hidden'); }
+function showForgot() { hideAll(); document.getElementById('viewForgot').classList.remove('hidden'); }
+function showCode() { hideAll(); document.getElementById('viewCode').classList.remove('hidden'); }
+function showNewPass() { hideAll(); document.getElementById('viewNewPass').classList.remove('hidden'); }
+
+function nextUrl() {
+  const u = new URLSearchParams(location.search).get('next');
+  return (u && u.startsWith('/')) ? u : '/';
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const err = document.getElementById('loginErr');
+  err.classList.add('hidden');
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Please wait…';
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        email: document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPass').value
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message || d.error || 'Login failed');
+    location.href = nextUrl();
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  }
+  btn.disabled = false; btn.textContent = 'Log in';
+  return false;
+}
+
+async function doSignup(e) {
+  e.preventDefault();
+  const err = document.getElementById('suErr');
+  err.classList.add('hidden');
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: document.getElementById('suName').value.trim(),
+        email: document.getElementById('suEmail').value.trim(),
+        password: document.getElementById('suPass').value
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message || d.error || 'Failed');
+    location.href = nextUrl();
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  }
+  return false;
+}
+
+async function doForgot(e) {
+  e.preventDefault();
+  const msg = document.getElementById('fgMsg');
+  msg.classList.remove('hidden');
+  msg.textContent = 'Sending…';
+  resetEmail = document.getElementById('fgEmail').value.trim();
+  try {
+    const r = await fetch('/api/auth/forgot', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: resetEmail })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message || d.error || 'Failed');
+    document.getElementById('codeHint').textContent =
+      'We sent a 6-digit code to ' + resetEmail + '. It expires in 10 minutes.';
+    if (d.pilot_code) {
+      document.getElementById('codeHint').textContent += ' (Pilot code: ' + d.pilot_code + ')';
+      document.getElementById('codeInput').value = d.pilot_code;
+    }
+    showCode();
+  } catch (ex) {
+    msg.textContent = ex.message;
+  }
+  return false;
+}
+
+async function doVerify(e) {
+  e.preventDefault();
+  const err = document.getElementById('codeErr');
+  err.classList.add('hidden');
+  resetCode = document.getElementById('codeInput').value.trim();
+  if (resetCode.length !== 6) {
+    err.textContent = 'Enter 6-digit code';
+    err.classList.remove('hidden');
+    return false;
+  }
+  // verify by attempting a soft check via reset endpoint will happen on save; store code and go next
+  showNewPass();
+  return false;
+}
+
+async function doNewPass(e) {
+  e.preventDefault();
+  const err = document.getElementById('npErr');
+  err.classList.add('hidden');
+  const p1 = document.getElementById('np1').value;
+  const p2 = document.getElementById('np2').value;
+  if (p1 !== p2) {
+    err.textContent = 'Passwords do not match';
+    err.classList.remove('hidden');
+    return false;
+  }
+  try {
+    const r = await fetch('/api/auth/reset', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: resetEmail, code: resetCode, password: p1 })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message || d.error || 'Failed');
+    alert('Password updated. Please log in.');
+    showLogin();
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  }
+  return false;
+}
+
+function startGoogle() {
+  if (!googleClientId) {
+    alert('Google login: set GOOGLE_CLIENT_ID in Render Environment (same as AI Router).');
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: googleClientId,
+    callback: async (resp) => {
+      try {
+        const r = await fetch('/api/auth/google', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ credential: resp.credential })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.message || d.error || 'Google login failed');
+        location.href = nextUrl();
+      } catch (ex) {
+        alert(ex.message);
+      }
+    }
+  });
+  google.accounts.id.prompt();
+}
+
+fetch('/api/auth/config').then(r => r.json()).then(d => {
+  googleClientId = d.google_client_id || '';
+  if (!googleClientId) {
+    const b = document.getElementById('btnGoogle');
+    if (b) b.style.opacity = '0.6';
+  }
+}).catch(()=>{});
+</script>
+</body>
+</html>
