@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Analytics · StraticSoft</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+<header class="bg-white border-b px-4 py-3 flex items-center gap-3">
+  <a href="/" class="text-sm text-indigo-600">← Suite</a>
+  <h1 class="font-semibold">Analytics</h1>
+</header>
+<main class="max-w-3xl mx-auto p-4">
+  <div id="cards" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+  <p id="meta" class="text-xs text-slate-400 mt-4"></p>
+</main>
+<script>
+(async()=>{
+  const r=await fetch('/api/tools/analytics'); const j=await r.json();
+  const items=[
+    ['Contacts',j.contacts],['Sales count',j.sales_count],['Sales total',j.sales_total],
+    ['JSON jobs',j.json_jobs],['Connects',j.connects],['Company',j.company_id]
+  ];
+  document.getElementById('cards').innerHTML=items.map(([k,v])=>`
+    <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">${k}</div>
+    <div class="text-xl font-semibold mt-1">${v}</div></div>`).join('');
+  document.getElementById('meta').textContent='Generated '+j.generated_at;
+})();
+</script>
+</body></html>
