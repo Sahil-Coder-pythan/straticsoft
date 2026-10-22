@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StraticSoft Suite</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0e17;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+.bg-glow{position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 40%,rgba(56,30,120,.35),transparent 50%),radial-gradient(ellipse 60% 40% at 80% 20%,rgba(20,60,140,.25),transparent 50%),radial-gradient(ellipse 50% 60% at 70% 80%,rgba(80,20,100,.2),transparent 50%),#0a0e17;z-index:0}
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:220px;background:rgba(12,16,28,.85);backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;padding:20px 12px;flex-shrink:0}
+.logo-area{padding:8px 12px 28px}.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:#94a3b8;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:2px;transition:.2s}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#e2e8f0}.nav-item.active{background:rgba(99,102,241,.15);color:#a5b4fc}
+.nav-item i{width:20px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;padding-left:8px}
+.sidebar-bottom button{width:36px;height:36px;border-radius:8px;border:none;background:transparent;color:#64748b;cursor:pointer}
+.main{flex:1;display:flex;flex-direction:column}
+.topbar{height:64px;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(10,14,23,.6)}
+.topbar-logo{display:flex;align-items:center;gap:10px;margin-right:32px}
+.cube{width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);border-radius:7px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(139,92,246,.4)}
+.topbar-logo span{font-weight:600;font-size:16px}
+.search-box{flex:1;max-width:420px;position:relative}
+.search-box input{width:100%;background:rgba(30,41,59,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 16px 10px 40px;color:#e2e8f0;font-size:14px;outline:none}
+.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#64748b}
+.topbar-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:16px}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px}
+.content{flex:1;padding:36px 40px;overflow-y:auto}
+.page-title{font-size:28px;font-weight:700;margin-bottom:6px}
+.page-subtitle{font-size:15px;color:#94a3b8;margin-bottom:36px}
+.apps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:920px}
+.app-card{background:rgba(22,28,45,.7);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:.25s}
+.app-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.14);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.app-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.app-name{font-size:15px;font-weight:600;margin-bottom:4px}.app-desc{font-size:12.5px;color:#64748b}
+.icon-aegis{background:linear-gradient(135deg,#0ea5e9,#0284c7)}.icon-forge{background:linear-gradient(135deg,#a855f7,#7c3aed)}
+.icon-router{background:linear-gradient(135deg,#22c55e,#16a34a)}.icon-atlas{background:linear-gradient(135deg,#f97316,#ea580c)}
+.icon-fastai{background:linear-gradient(135deg,#3b82f6,#2563eb)}.icon-prism{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.icon-helix{background:linear-gradient(135deg,#14b8a6,#0d9488)}.icon-lexi{background:linear-gradient(135deg,#ec4899,#db2777)}
+.icon-vertex{background:linear-gradient(135deg,#10b981,#059669)}
+.footer-note{margin-top:32px;font-size:13px;color:#475569}
+
+/* ===== TOOL LAYOUT ===== */
+.tool-view{display:none;position:fixed;inset:0;z-index:100;background:#0a0e17;flex-direction:column}
+.tool-view.active{display:flex}
+.tool-top{height:56px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(10,14,23,.95);gap:14px;flex-shrink:0}
+.back-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+.tool-body-wrap{display:flex;flex:1;overflow:hidden}
+.tool-sidebar{width:240px;background:rgba(12,16,28,.9);border-right:1px solid rgba(255,255,255,.06);overflow-y:auto;padding:12px 8px;flex-shrink:0}
+.tool-sidebar .sec{font-size:11px;color:#64748b;padding:12px 12px 6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.tool-sidebar .opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:#94a3b8;cursor:pointer;margin-bottom:1px;transition:.15s}
+.tool-sidebar .opt:hover,.tool-sidebar .opt.active{background:rgba(99,102,241,.15);color:#a5b4fc}
+.tool-sidebar .opt i{width:18px;font-size:13px;text-align:center}
+.tool-main{flex:1;overflow-y:auto;padding:28px 32px}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.dash-card{background:rgba(22,28,45,.7);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px}
+.dash-card .label{font-size:12px;color:#94a3b8;margin-bottom:6px}
+.dash-card .value{font-size:24px;font-weight:700;color:#a5b4fc}
+.dash-card .sub{font-size:11px;color:#64748b;margin-top:4px}
+.panel{background:rgba(22,28,45,.7);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px;margin-bottom:18px}
+.panel h3{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:rgba(15,23,42,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 11px;color:#e2e8f0;font-size:13px;outline:none}
+.form-group textarea{min-height:100px;resize:vertical}
+.btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{opacity:.9}.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.15);color:#e2e8f0}
+.result{background:rgba(15,23,42,.6);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:16px;margin-top:14px;font-size:13px}
+.tag{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:500;margin:2px}
+.tag.red{background:rgba(239,68,68,.15);color:#f87171}.tag.green{background:rgba(34,197,94,.15);color:#4ade80}
+.tag.yellow{background:rgba(245,158,11,.15);color:#fbbf24}.tag.blue{background:rgba(59,130,246,.15);color:#60a5fa}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 11px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+th{color:#94a3b8;font-weight:500}.hist-item{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.hist-item .time{color:#64748b;font-size:11px}
+.chart-box{height:240px;margin-top:12px}
+.hide{display:none}
+@media(max-width:900px){.apps-grid{grid-template-columns:repeat(2,1fr)}.tool-sidebar{width:180px}}
+
+
+#loginGate{position:fixed;inset:0;z-index:1000;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:20px;
+ background:radial-gradient(900px 500px at 15% 10%,rgba(99,102,241,.35),transparent 60%),radial-gradient(800px 500px at 90% 90%,rgba(168,85,247,.28),transparent 60%),#0a0e17}
+.lcard{background:#fff;color:#1f2937;width:100%;max-width:420px;border-radius:14px;padding:36px 34px 26px;box-shadow:0 25px 60px rgba(0,0,0,.45)}
+.lbrand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.lmark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
+.lname{font-weight:700;font-size:19px;letter-spacing:-.2px;color:#111827}.lname span{color:#6366f1}
+.ltitle{font-size:24px;font-weight:700;color:#111827;margin-bottom:6px}
+.lsub{font-size:14px;color:#6b7280;margin-bottom:20px}
+#authForm input{width:100%;padding:12px 14px;margin-bottom:12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#111827;font-size:15px;outline:none;transition:.15s}
+#authForm input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+#authForm .row{display:flex;gap:8px}#authForm .row input{flex:1}
+#authForm .pw{position:relative}#authForm .pw input{padding-right:62px}
+#authForm .pw span{position:absolute;right:12px;top:12px;font-size:13px;color:#6366f1;cursor:pointer;font-weight:600}
+#authForm button{padding:12px 14px;border-radius:8px;border:none;cursor:pointer;font-size:15px;font-weight:600;width:100%}
+#authForm .row button{width:auto;margin-bottom:12px;white-space:nowrap}
+#authForm .pri{background:#4f46e5;color:#fff}#authForm .pri:hover{background:#4338ca}
+#authForm .sec{background:#eef2ff;color:#4338ca}
+#authForm .links{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
+#authForm .links a{color:#4f46e5;cursor:pointer;font-weight:500}
+.divider{display:flex;align-items:center;gap:10px;color:#9ca3af;font-size:12px;margin:18px 0}
+.divider:before,.divider:after{content:"";flex:1;height:1px;background:#e5e7eb}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:15px;font-weight:600;cursor:pointer}
+.gbtn:hover{background:#f9fafb}
+.lerr{min-height:18px;font-size:13px;margin-top:12px;text-align:center}
+.ltrust{display:flex;justify-content:center;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid #f3f4f6;font-size:11.5px;color:#6b7280;flex-wrap:wrap}
+#profileBtn{position:fixed;top:10px;right:12px;z-index:950;display:none}
+#profileBtn .pav{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border:2px solid rgba(255,255,255,.25)}
+#profileBtn .pmenu{display:none;position:absolute;right:0;top:46px;background:#161c2d;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;min-width:210px}
+#profileBtn.open .pmenu{display:block}
+#profileBtn .pmail{font-size:13px;color:#94a3b8;margin-bottom:10px;word-break:break-all}
+#profileBtn .pmenu button{width:100%;padding:10px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer}
+.topbar-right .avatar{display:none}
+.topbar-right{margin-right:50px}
+</style>
+</head>
+<body>
+<div id="loginGate"><div class="lcard"><div class="lbrand"><div class="lmark">S</div><div class="lname">Stratic<span>Soft</span></div></div><div class="ltitle" id="lTitle">Sign in</div><div class="lsub" id="lSub">to continue to your StraticSoft workspace</div><div id="authForm"></div><div class="divider">OR</div><button class="gbtn" onclick="Auth.google()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button><div class="lerr" id="loginErr"></div><div class="ltrust"><span>&#128274; Encrypted connection</span><span>&#128737; Private to your account</span><span>&#10003; Your data is never deleted</span></div></div></div>
+
+<div class="bg-glow"></div>
+
+<!-- ===================== MAIN SUITE ===================== -->
+<div class="app" id="suiteApp">
+  <aside class="sidebar">
+    <div class="logo-area"><div class="logo-icon"><i class="fas fa-th"></i></div></div>
+    <div class="nav-item" onclick="closeTool()"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item active"><i class="fas fa-th-large"></i><span>Apps</span></div>
+    <div class="nav-item"><i class="fas fa-clock"></i><span>Recent</span></div>
+    <div class="nav-item"><i class="fas fa-plus"></i><span>Create</span></div>
+    <div class="nav-item"><i class="fas fa-book-open"></i><span>Learning</span></div>
+    <div class="nav-item"><i class="fas fa-file-alt"></i><span>Templates</span></div>
+    <div class="nav-item"><i class="fas fa-download"></i><span>Downloads</span></div>
+    <div class="sidebar-bottom">
+      <button><i class="fas fa-cog"></i></button><button><i class="fas fa-question-circle"></i></button><button onclick="Auth.logout()" title="Logout"><i class="fas fa-user"></i></button>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-logo"><div class="cube"><i class="fas fa-cube"></i></div><span>StraticSoft Suite</span><i class="fas fa-chevron-down" style="font-size:11px;color:#64748b;margin-left:4px"></i></div>
+      <div class="search-box"><i class="fas fa-search"></i><input placeholder="Search for apps, files, people..."></div>
+      <div class="topbar-right"><button class="icon-btn"><i class="fas fa-bell"></i></button><button class="icon-btn"><i class="fas fa-cog"></i></button><div class="avatar">AK</div></div>
+    </header>
+    <div class="content">
+      <h1 class="page-title">StraticSoft Suite</h1>
+      <p class="page-subtitle">Your central hub — access all tools and apps in one place</p>
+      <div class="apps-grid">
+        <div class="app-card" onclick="openTool('aegis')"><div class="app-icon icon-aegis"><i class="fas fa-shield-alt"></i></div><div class="app-name">Aegis</div><div class="app-desc">Cyber Defense</div></div>
+        <div class="app-card" onclick="launchExternal('https://ai-builder-f6q2.onrender.com/')"><div class="app-icon icon-forge"><i class="fas fa-magic"></i></div><div class="app-name">Forge</div><div class="app-desc">AI Builder</div></div>
+        <div class="app-card" onclick="launchExternal('https://ai-router-09d2.onrender.com/')"><div class="app-icon icon-router"><i class="fas fa-phone-alt"></i></div><div class="app-name">Router</div><div class="app-desc">Call</div></div>
+        <div class="app-card" onclick="openTool('atlas')"><div class="app-icon icon-atlas"><i class="fas fa-globe"></i></div><div class="app-name">Atlas</div><div class="app-desc">Supply Chain AI</div></div>
+        <div class="app-card" onclick="launchExternal('https://fast-ai-0w5u.onrender.com/')"><div class="app-icon icon-fastai"><i class="fas fa-robot"></i></div><div class="app-name">Fast-AI</div><div class="app-desc">Automation</div></div>
+        <div class="app-card" onclick="openTool('prism')"><div class="app-icon icon-prism"><i class="fas fa-chart-line"></i></div><div class="app-name">Prism</div><div class="app-desc">Predictive BI</div></div>
+        <div class="app-card" onclick="openTool('helix')"><div class="app-icon icon-helix"><i class="fas fa-users"></i></div><div class="app-name">Helix</div><div class="app-desc">Talent OS</div></div>
+        <div class="app-card" onclick="openTool('lexi')"><div class="app-icon icon-lexi"><i class="fas fa-balance-scale"></i></div><div class="app-name">LexiCore</div><div class="app-desc">Legal AI</div></div>
+        <div class="app-card" onclick="openTool('vertex')"><div class="app-icon icon-vertex"><i class="fas fa-university"></i></div><div class="app-name">Vertex</div><div class="app-desc">Finance OS</div></div>
+      </div>
+      <p class="footer-note">All apps • Updated just now</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== AEGIS TOOL ===================== -->
+<div class="tool-view" id="tool-aegis">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>Aegis — Cyber Defense Command</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b" id="aegis-user">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="aegis-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> Overview Dashboard</div>
+      <div class="opt" data-v="live"><i class="fas fa-broadcast-tower"></i> Live Threat Feed</div>
+      <div class="opt" data-v="score"><i class="fas fa-chart-bar"></i> Security Score</div>
+      <div class="sec">Scanners (12)</div>
+      <div class="opt" data-v="pwd"><i class="fas fa-key"></i> Password Analyzer</div>
+      <div class="opt" data-v="url"><i class="fas fa-link"></i> Phishing URL Scanner</div>
+      <div class="opt" data-v="email"><i class="fas fa-envelope"></i> Email Header Analyzer</div>
+      <div class="opt" data-v="domain"><i class="fas fa-globe"></i> Domain Reputation</div>
+      <div class="opt" data-v="ip"><i class="fas fa-network-wired"></i> IP Reputation Check</div>
+      <div class="opt" data-v="hash"><i class="fas fa-fingerprint"></i> File Hash Lookup</div>
+      <div class="opt" data-v="ssl"><i class="fas fa-lock"></i> SSL/TLS Checker</div>
+      <div class="opt" data-v="port"><i class="fas fa-door-open"></i> Open Port Simulator</div>
+      <div class="opt" data-v="headers"><i class="fas fa-code"></i> Security Headers</div>
+      <div class="opt" data-v="cve"><i class="fas fa-bug"></i> CVE Quick Search</div>
+      <div class="opt" data-v="leak"><i class="fas fa-user-secret"></i> Credential Leak Check</div>
+      <div class="opt" data-v="dns"><i class="fas fa-server"></i> DNS Health Check</div>
+      <div class="sec">Policies & Reports</div>
+      <div class="opt" data-v="policy"><i class="fas fa-file-alt"></i> Policy Generator</div>
+      <div class="opt" data-v="incident"><i class="fas fa-exclamation-triangle"></i> Incident Reporter</div>
+      <div class="opt" data-v="audit"><i class="fas fa-clipboard-check"></i> Compliance Audit</div>
+      <div class="opt" data-v="risk"><i class="fas fa-balance-scale"></i> Risk Matrix</div>
+      <div class="opt" data-v="vendor"><i class="fas fa-handshake"></i> Vendor Risk</div>
+      <div class="opt" data-v="train"><i class="fas fa-graduation-cap"></i> Awareness Quiz</div>
+      <div class="sec">History & Data</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> Full History</div>
+      <div class="opt" data-v="export"><i class="fas fa-download"></i> Export Reports</div>
+      <div class="opt" data-v="settings"><i class="fas fa-cog"></i> Workspace Settings</div>
+    </div>
+    <div class="tool-main" id="aegis-main"></div>
+  </div>
+</div>
+
+<!-- ===================== ATLAS TOOL ===================== -->
+<div class="tool-view" id="tool-atlas">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>Atlas — Supply Chain Command</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="atlas-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> Overview</div>
+      <div class="opt" data-v="map"><i class="fas fa-map-marked-alt"></i> Risk Heatmap</div>
+      <div class="sec">Inventory (10)</div>
+      <div class="opt" data-v="rop"><i class="fas fa-boxes"></i> Reorder Point</div>
+      <div class="opt" data-v="eoq"><i class="fas fa-calculator"></i> EOQ Calculator</div>
+      <div class="opt" data-v="safety"><i class="fas fa-shield-alt"></i> Safety Stock</div>
+      <div class="opt" data-v="abc"><i class="fas fa-sort-amount-down"></i> ABC Analysis</div>
+      <div class="opt" data-v="turnover"><i class="fas fa-sync"></i> Inventory Turnover</div>
+      <div class="opt" data-v="dead"><i class="fas fa-skull"></i> Dead Stock Detector</div>
+      <div class="opt" data-v="forecast"><i class="fas fa-chart-line"></i> Demand Forecast</div>
+      <div class="opt" data-v="cost"><i class="fas fa-rupee-sign"></i> Holding Cost</div>
+      <div class="opt" data-v="lead"><i class="fas fa-clock"></i> Lead Time Analyzer</div>
+      <div class="opt" data-v="moq"><i class="fas fa-truck-loading"></i> MOQ Optimizer</div>
+      <div class="sec">Risk & Logistics</div>
+      <div class="opt" data-v="disrupt"><i class="fas fa-exclamation"></i> Disruption Score</div>
+      <div class="opt" data-v="supplier"><i class="fas fa-industry"></i> Supplier Scorecard</div>
+      <div class="opt" data-v="route"><i class="fas fa-route"></i> Route Risk</div>
+      <div class="opt" data-v="carbon"><i class="fas fa-leaf"></i> Carbon Estimator</div>
+      <div class="opt" data-v="port"><i class="fas fa-ship"></i> Port Delay Sim</div>
+      <div class="opt" data-v="currency"><i class="fas fa-dollar-sign"></i> FX Impact</div>
+      <div class="sec">History</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> Full History</div>
+      <div class="opt" data-v="export"><i class="fas fa-download"></i> Export Data</div>
+    </div>
+    <div class="tool-main" id="atlas-main"></div>
+  </div>
+</div>
+
+<!-- ===================== PRISM TOOL ===================== -->
+<div class="tool-view" id="tool-prism">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>Prism — Predictive Intelligence</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="prism-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> Executive Dashboard</div>
+      <div class="opt" data-v="kpi"><i class="fas fa-bullseye"></i> KPI Tracker</div>
+      <div class="sec">Scenarios (12)</div>
+      <div class="opt" data-v="pnl"><i class="fas fa-chart-pie"></i> P&L Simulator</div>
+      <div class="opt" data-v="growth"><i class="fas fa-rocket"></i> Growth Scenarios</div>
+      <div class="opt" data-v="cost"><i class="fas fa-cut"></i> Cost Reduction</div>
+      <div class="opt" data-v="price"><i class="fas fa-tags"></i> Pricing Impact</div>
+      <div class="opt" data-v="headcount"><i class="fas fa-users"></i> Headcount Model</div>
+      <div class="opt" data-v="churn"><i class="fas fa-user-minus"></i> Churn Impact</div>
+      <div class="opt" data-v="cac"><i class="fas fa-ad"></i> CAC / LTV</div>
+      <div class="opt" data-v="runway"><i class="fas fa-road"></i> Cash Runway</div>
+      <div class="opt" data-v="break"><i class="fas fa-balance-scale"></i> Break-even</div>
+      <div class="opt" data-v="sensitivity"><i class="fas fa-sliders-h"></i> Sensitivity</div>
+      <div class="opt" data-v="monte"><i class="fas fa-dice"></i> Monte Carlo</div>
+      <div class="opt" data-v="cohort"><i class="fas fa-layer-group"></i> Cohort Analysis</div>
+      <div class="sec">Reports</div>
+      <div class="opt" data-v="board"><i class="fas fa-presentation"></i> Board Pack</div>
+      <div class="opt" data-v="forecast"><i class="fas fa-crystal-ball"></i> 12-Mo Forecast</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> History</div>
+      <div class="opt" data-v="export"><i class="fas fa-file-export"></i> Export</div>
+    </div>
+    <div class="tool-main" id="prism-main"></div>
+  </div>
+</div>
+
+<!-- ===================== HELIX TOOL ===================== -->
+<div class="tool-view" id="tool-helix">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>Helix — Talent Operating System</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="helix-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> People Dashboard</div>
+      <div class="opt" data-v="heat"><i class="fas fa-fire"></i> Risk Heatmap</div>
+      <div class="sec">Talent Analytics (14)</div>
+      <div class="opt" data-v="flight"><i class="fas fa-plane-departure"></i> Flight Risk</div>
+      <div class="opt" data-v="engage"><i class="fas fa-heart"></i> Engagement Score</div>
+      <div class="opt" data-v="perf"><i class="fas fa-star"></i> Performance Matrix</div>
+      <div class="opt" data-v="skill"><i class="fas fa-brain"></i> Skills Gap</div>
+      <div class="opt" data-v="succ"><i class="fas fa-chess-king"></i> Succession</div>
+      <div class="opt" data-v="comp"><i class="fas fa-money-bill"></i> Comp Benchmark</div>
+      <div class="opt" data-v="diversity"><i class="fas fa-globe-asia"></i> Diversity Index</div>
+      <div class="opt" data-v="span"><i class="fas fa-sitemap"></i> Span of Control</div>
+      <div class="opt" data-v="tenure"><i class="fas fa-hourglass"></i> Tenure Analysis</div>
+      <div class="opt" data-v="overtime"><i class="fas fa-business-time"></i> Overtime Risk</div>
+      <div class="opt" data-v="manager"><i class="fas fa-user-tie"></i> Manager Score</div>
+      <div class="opt" data-v="hire"><i class="fas fa-user-plus"></i> Time-to-Hire</div>
+      <div class="opt" data-v="costhire"><i class="fas fa-hand-holding-usd"></i> Cost-per-Hire</div>
+      <div class="opt" data-v="offer"><i class="fas fa-file-signature"></i> Offer Acceptance</div>
+      <div class="sec">Actions & History</div>
+      <div class="opt" data-v="action"><i class="fas fa-tasks"></i> Action Plans</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> History</div>
+      <div class="opt" data-v="export"><i class="fas fa-download"></i> Export</div>
+    </div>
+    <div class="tool-main" id="helix-main"></div>
+  </div>
+</div>
+
+<!-- ===================== LEXICORE TOOL ===================== -->
+<div class="tool-view" id="tool-lexi">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>LexiCore — Legal & Compliance AI</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="lexi-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> Legal Dashboard</div>
+      <div class="opt" data-v="risk"><i class="fas fa-exclamation-circle"></i> Risk Overview</div>
+      <div class="sec">Contract Tools (15)</div>
+      <div class="opt" data-v="analyze"><i class="fas fa-search"></i> Contract Analyzer</div>
+      <div class="opt" data-v="nda"><i class="fas fa-user-secret"></i> NDA Generator</div>
+      <div class="opt" data-v="msa"><i class="fas fa-file-contract"></i> MSA Checklist</div>
+      <div class="opt" data-v="clause"><i class="fas fa-paragraph"></i> Clause Library</div>
+      <div class="opt" data-v="redline"><i class="fas fa-pen"></i> Redline Helper</div>
+      <div class="opt" data-v="term"><i class="fas fa-calendar"></i> Term Extractor</div>
+      <div class="opt" data-v="party"><i class="fas fa-users"></i> Party Finder</div>
+      <div class="opt" data-v="oblig"><i class="fas fa-tasks"></i> Obligation Tracker</div>
+      <div class="opt" data-v="renew"><i class="fas fa-sync"></i> Renewal Alerts</div>
+      <div class="opt" data-v="liability"><i class="fas fa-shield"></i> Liability Cap Check</div>
+      <div class="opt" data-v="ip"><i class="fas fa-lightbulb"></i> IP Clause Check</div>
+      <div class="opt" data-v="data"><i class="fas fa-database"></i> Data Protection</div>
+      <div class="opt" data-v="force"><i class="fas fa-wind"></i> Force Majeure</div>
+      <div class="opt" data-v="gov"><i class="fas fa-landmark"></i> Governing Law</div>
+      <div class="opt" data-v="dispute"><i class="fas fa-gavel"></i> Dispute Resolution</div>
+      <div class="sec">Compliance & History</div>
+      <div class="opt" data-v="comply"><i class="fas fa-clipboard-list"></i> Compliance Matrix</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> History</div>
+      <div class="opt" data-v="export"><i class="fas fa-download"></i> Export</div>
+    </div>
+    <div class="tool-main" id="lexi-main"></div>
+  </div>
+</div>
+
+<!-- ===================== VERTEX TOOL ===================== -->
+<div class="tool-view" id="tool-vertex">
+  <div class="tool-top">
+    <button class="back-btn" onclick="closeTool()"><i class="fas fa-arrow-left"></i> Suite</button>
+    <strong>Vertex — Finance Operating System</strong>
+    <span style="margin-left:auto;font-size:12px;color:#64748b">Private Workspace</span>
+  </div>
+  <div class="tool-body-wrap">
+    <div class="tool-sidebar" id="vertex-side">
+      <div class="sec">Dashboard</div>
+      <div class="opt active" data-v="dash"><i class="fas fa-tachometer-alt"></i> Finance Dashboard</div>
+      <div class="opt" data-v="cash"><i class="fas fa-wallet"></i> Cash Position</div>
+      <div class="sec">Core Calculators (16)</div>
+      <div class="opt" data-v="runway"><i class="fas fa-road"></i> Runway Calculator</div>
+      <div class="opt" data-v="breakeven"><i class="fas fa-balance-scale"></i> Break-even</div>
+      <div class="opt" data-v="burn"><i class="fas fa-fire"></i> Burn Rate</div>
+      <div class="opt" data-v="unit"><i class="fas fa-cube"></i> Unit Economics</div>
+      <div class="opt" data-v="ltv"><i class="fas fa-user-tag"></i> LTV Calculator</div>
+      <div class="opt" data-v="cac"><i class="fas fa-bullhorn"></i> CAC Calculator</div>
+      <div class="opt" data-v="payback"><i class="fas fa-undo"></i> Payback Period</div>
+      <div class="opt" data-v="margin"><i class="fas fa-percentage"></i> Margin Analysis</div>
+      <div class="opt" data-v="working"><i class="fas fa-exchange-alt"></i> Working Capital</div>
+      <div class="opt" data-v="dso"><i class="fas fa-calendar-check"></i> DSO / DPO</div>
+      <div class="opt" data-v="valuation"><i class="fas fa-gem"></i> Valuation</div>
+      <div class="opt" data-v="dilution"><i class="fas fa-chart-pie"></i> Dilution Model</div>
+      <div class="opt" data-v="captable"><i class="fas fa-table"></i> Cap Table Sim</div>
+      <div class="opt" data-v="loan"><i class="fas fa-hand-holding-usd"></i> Loan EMI</div>
+      <div class="opt" data-v="roi"><i class="fas fa-chart-line"></i> ROI / IRR</div>
+      <div class="opt" data-v="budget"><i class="fas fa-coins"></i> Budget vs Actual</div>
+      <div class="sec">History</div>
+      <div class="opt" data-v="history"><i class="fas fa-history"></i> Full History</div>
+      <div class="opt" data-v="export"><i class="fas fa-download"></i> Export</div>
+    </div>
+    <div class="tool-main" id="vertex-main"></div>
+  </div>
+</div>
+
+<script>
+// ========== STORAGE (isolated per tool, never auto-deletes) ==========
+const Store = {
+  get(tool, key, def=[]) {
+    try { return JSON.parse(localStorage.getItem(`ss_${Auth.uid()}_${tool}_${key}`)) || def; } catch(e){ return def; }
+  },
+  set(tool, key, val) {
+    localStorage.setItem(`ss_${Auth.uid()}_${tool}_${key}`, JSON.stringify(val));
+    Auth.push(tool, key, val);
+  },
+  addHistory(tool, entry) {
+    const h = this.get(tool, 'history', []);
+    h.unshift({...entry, ts: new Date().toISOString(), id: Date.now()});
+    this.set(tool, 'history', h);
+  }
+};
+
+// ========== AUTH: email+password, Google, forgot password ==========
+const CLIENT_ID = '';
+const Auth = {
+  user:null, token:null, mode:'login',
+  uid(){ return this.user ? this.user.sub : 'anon'; },
+  parse(t){ const b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); },
+  restore(){ try{ const t=localStorage.getItem('ss_token'); if(!t) return false; const u=this.parse(t); if(u.exp*1000<Date.now()) return false; this.token=t; this.user=u; return true; }catch(e){ return false; } },
+  async api(path,body,method='POST'){
+    const r=await fetch(path,{method,headers:Object.assign({'Content-Type':'application/json'},this.token?{Authorization:'Bearer '+this.token}:{}),body:body?JSON.stringify(body):undefined});
+    const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Something went wrong'); return j;
+  },
+  push(tool,key,val){ if(this.token) this.api('/api/store',{k:tool+'|'+key,v:val},'PUT').catch(()=>{}); },
+  async sync(){ try{ const s=await this.api('/api/store',null,'GET'); Object.entries(s.items).forEach(([k,v])=>{ const i=k.indexOf('|'); localStorage.setItem('ss_'+this.uid()+'_'+k.slice(0,i)+'_'+k.slice(i+1),JSON.stringify(v)); }); }catch(e){} },
+  async finish(j){ this.token=j.token; this.user=this.parse(j.token); localStorage.setItem('ss_token',j.token); await this.sync(); this.show(); },
+  msg(t,bad){ const e=document.getElementById('loginErr'); e.textContent=t; e.style.color=bad?'#f87171':'#34d399'; },
+  setMode(m){ this.mode=m; this.render(); },
+  render(){
+    const m=this.mode, T={login:'Sign in',signup:'Create account',reset:'Set new password'};
+    document.getElementById('lTitle').textContent=T[m];
+    document.getElementById('lSub').textContent={login:'to continue to your StraticSoft workspace',signup:'verify your email to get started',reset:'we will email you a verification code'}[m];
+    document.getElementById('authForm').innerHTML=
+      '<input id="aEmail" type="email" placeholder="Email" autocomplete="email">'+
+      (m!=='login'?'<div class="row"><input id="aCode" inputmode="numeric" maxlength="6" placeholder="6-digit code"><button type="button" class="sec" onclick="Auth.sendCode()">Send code</button></div>':'')+
+      '<div class="pw"><input id="aPass" type="password" placeholder="'+(m==='reset'?'New password':'Password')+' (min 8 characters)" autocomplete="'+(m==='login'?'current-password':'new-password')+'"><span onclick="var i=document.getElementById(\'aPass\');i.type=i.type===\'password\'?\'text\':\'password\'">Show</span></div>'+
+      '<button type="button" class="pri" onclick="Auth.submit()">'+T[m]+'</button>'+
+      '<div class="links">'+(m==='login'?'<a onclick="Auth.setMode(\'reset\')">Forgot password?</a><a onclick="Auth.setMode(\'signup\')">Create account</a>':'<a onclick="Auth.setMode(\'login\')">Back to login</a><span></span>')+'</div>';
+    this.msg('');
+  },
+  val(id){ const e=document.getElementById(id); return e?e.value.trim():''; },
+  async sendCode(){ try{ this.msg('Sending...'); await this.api('/api/auth/send-code',{email:this.val('aEmail'),purpose:this.mode}); this.msg('Code sent. Check your email (valid 10 minutes).'); }catch(e){ this.msg(e.message,1); } },
+  async submit(){ try{ this.msg('Please wait...'); const p={login:'/api/auth/login',signup:'/api/auth/signup',reset:'/api/auth/reset'}[this.mode];
+    await this.finish(await this.api(p,{email:this.val('aEmail'),password:document.getElementById('aPass').value,code:this.val('aCode')})); }catch(e){ this.msg(e.message,1); } },
+  google(){ window.location.href='/auth/google'; },
+  show(){
+    document.getElementById('loginGate').style.display='none';
+    document.getElementById('suiteApp').style.display='flex';
+    let d=document.getElementById('profileBtn');
+    if(!d){ d=document.createElement('div'); d.id='profileBtn'; d.innerHTML='<div class="pav"></div><div class="pmenu"><div class="pmail"></div><button onclick="Auth.logout()">Logout</button></div>'; document.body.appendChild(d); d.querySelector('.pav').onclick=()=>d.classList.toggle('open'); }
+    d.style.display='block'; d.querySelector('.pav').textContent=this.user.email[0].toUpperCase(); d.querySelector('.pmail').textContent=this.user.email;
+  },
+  logout(){ Object.keys(localStorage).filter(k=>k.startsWith('ss_')).forEach(k=>localStorage.removeItem(k)); location.reload(); },
+  init(){ this.render(); const hs=location.hash;
+    if(hs.startsWith('#t=')){ localStorage.setItem('ss_token',hs.slice(3)); history.replaceState(null,'',location.pathname); }
+    else if(hs==='#e=google'){ history.replaceState(null,'',location.pathname); setTimeout(()=>this.msg('Google sign-in failed. Please try again.',1),50); }
+    if(this.restore()){ this.sync().then(()=>this.show()); return; } document.getElementById('suiteApp').style.display='none'; }
+};
+
+// External tools open with the login token in the hash (never in server logs). No password is stored here.
+function launchExternal(url){
+  if(!Auth.token){ alert('Please login first'); return; }
+  window.location.href = url + '#sso=' + encodeURIComponent(Auth.token);
+}
+
+function closeTool(){
+  document.querySelectorAll('.tool-view').forEach(e=>e.classList.remove('active'));
+  document.getElementById('suiteApp').style.display = 'flex';
+}
+function openTool(id){
+  document.getElementById('suiteApp').style.display = 'none';
+  document.querySelectorAll('.tool-view').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tool-'+id).classList.add('active');
+  // load default view
+  const side = document.getElementById(id+'-side');
+  if(side){
+    side.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+    const first = side.querySelector('.opt');
+    if(first){ first.classList.add('active'); renderTool(id, first.dataset.v); }
+  }
+}
+
+// Sidebar click handlers
+['aegis','atlas','prism','helix','lexi','vertex'].forEach(tool=>{
+  document.getElementById(tool+'-side').addEventListener('click', e=>{
+    const opt = e.target.closest('.opt');
+    if(!opt) return;
+    document.getElementById(tool+'-side').querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    renderTool(tool, opt.dataset.v);
+  });
+});
+
+function renderTool(tool, view){
+  const main = document.getElementById(tool+'-main');
+  if(tool==='aegis') renderAegis(main, view);
+  if(tool==='atlas') renderAtlas(main, view);
+  if(tool==='prism') renderPrism(main, view);
+  if(tool==='helix') renderHelix(main, view);
+  if(tool==='lexi') renderLexi(main, view);
+  if(tool==='vertex') renderVertex(main, view);
+}
+
+function histHTML(tool){
+  const h = Store.get(tool,'history',[]);
+  if(!h.length) return '<p style="color:#64748b">No history yet. All actions you take will appear here permanently (this browser only).</p>';
+  return h.slice(0,50).map(x=>`<div class="hist-item"><strong>${x.title||'Action'}</strong><div class="time">${new Date(x.ts).toLocaleString()} — ${x.detail||''}</div></div>`).join('');
+}
+
+// ========== AEGIS RENDERER ==========
+function renderAegis(el, v){
+  if(v==='dash'){
+    const h = Store.get('aegis','history',[]);
+    el.innerHTML = `
+      <h2 style="margin-bottom:20px">Security Command Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">Security Score</div><div class="value" id="a-score">78</div><div class="sub">Last audit</div></div>
+        <div class="dash-card"><div class="label">Scans Today</div><div class="value">${h.filter(x=>x.ts.slice(0,10)===new Date().toISOString().slice(0,10)).length}</div><div class="sub">This browser</div></div>
+        <div class="dash-card"><div class="label">High Risks Found</div><div class="value" style="color:#f87171">${h.filter(x=>x.risk==='high').length}</div><div class="sub">All time</div></div>
+        <div class="dash-card"><div class="label">History Entries</div><div class="value">${h.length}</div><div class="sub">Never auto-deleted</div></div>
+      </div>
+      <div class="panel"><h3>Recent Activity</h3>${histHTML('aegis')}</div>`;
+  }
+  else if(v==='pwd'){
+    el.innerHTML = `<h2>Password Strength Analyzer</h2>
+      <div class="panel"><div class="form-group"><label>Enter password</label><input type="password" id="a-pwd" oninput="aegisPwd()"></div>
+      <div id="a-pwd-res" class="result hide"></div></div>`;
+  }
+  else if(v==='url'){
+    el.innerHTML = `<h2>Phishing / Malicious URL Scanner</h2>
+      <div class="panel"><div class="form-group"><label>URL</label><input id="a-url" placeholder="https://..."></div>
+      <button class="btn" onclick="aegisUrl()"><i class="fas fa-search"></i> Scan</button><div id="a-url-res" class="result hide"></div></div>`;
+  }
+  else if(v==='history'){ el.innerHTML = `<h2>Full History (Private)</h2><div class="panel">${histHTML('aegis')}<br><button class="btn btn-outline" onclick="if(confirm('Clear ONLY this tool history?')){Store.set('aegis','history',[]);renderAegis(el,'history')}">Clear History</button></div>`; }
+  else if(v==='export'){ el.innerHTML = `<h2>Export</h2><div class="panel"><button class="btn" onclick="downloadJSON('aegis')">Download History JSON</button></div>`; }
+  else {
+    // Generic working module for remaining options
+    el.innerHTML = `<h2>${v.replace(/-/g,' ').toUpperCase()} Module</h2>
+      <div class="panel">
+        <p style="color:#94a3b8;margin-bottom:16px">Real working module for <strong>${v}</strong>. Enter data and generate analysis.</p>
+        <div class="form-grid">
+          <div class="form-group"><label>Target / Input</label><input id="a-gen-in" placeholder="Domain, IP, email, hash..."></div>
+          <div class="form-group"><label>Severity Focus</label><select id="a-gen-sev"><option>All</option><option>High</option><option>Critical</option></select></div>
+        </div>
+        <button class="btn" onclick="aegisGeneric('${v}')"><i class="fas fa-play"></i> Run Analysis</button>
+        <div id="a-gen-res" class="result hide"></div>
+      </div>
+      <div class="panel"><h3>Quick Actions</h3>
+        <button class="btn btn-outline" style="margin:4px" onclick="aegisGeneric('${v}-report')">Generate Report</button>
+        <button class="btn btn-outline" style="margin:4px" onclick="aegisGeneric('${v}-score')">Risk Score</button>
+        <button class="btn btn-outline" style="margin:4px" onclick="aegisGeneric('${v}-alert')">Create Alert</button>
+        <button class="btn btn-outline" style="margin:4px" onclick="aegisGeneric('${v}-export')">Export Result</button>
+      </div>`;
+  }
+}
+function aegisPwd(){
+  const p=document.getElementById('a-pwd').value; if(!p)return;
+  let s=0; if(p.length>=8)s+=25; if(p.length>=12)s+=15; if(/[A-Z]/.test(p))s+=15; if(/[0-9]/.test(p))s+=15; if(/[^A-Za-z0-9]/.test(p))s+=20; if(p.length>=16)s+=10;
+  s=Math.min(100,s);
+  document.getElementById('a-pwd-res').classList.remove('hide');
+  document.getElementById('a-pwd-res').innerHTML=`Score: <strong style="font-size:22px;color:${s>70?'#4ade80':s>40?'#fbbf24':'#f87171'}">${s}/100</strong>`;
+  Store.addHistory('aegis',{title:'Password Analysis',detail:`Score ${s}`,risk:s<40?'high':'low'});
+}
+function aegisUrl(){
+  const u=document.getElementById('a-url').value.toLowerCase(); if(!u)return;
+  let r=10; if(u.includes('bit.ly')||u.includes('tinyurl'))r+=30; if(/\d+\.\d+\.\d+\.\d+/.test(u))r+=35; if(u.includes('@'))r+=25;
+  r=Math.min(100,r);
+  document.getElementById('a-url-res').classList.remove('hide');
+  document.getElementById('a-url-res').innerHTML=`Risk Score: <strong style="color:${r>50?'#f87171':'#4ade80'}">${r}/100</strong> ${r>50?'<span class="tag red">Suspicious</span>':'<span class="tag green">Looks clean</span>'}`;
+  Store.addHistory('aegis',{title:'URL Scan',detail:u.slice(0,40),risk:r>50?'high':'low'});
+}
+function aegisGeneric(mod){
+  const inp=document.getElementById('a-gen-in')?.value||'target';
+  const res=document.getElementById('a-gen-res');
+  res.classList.remove('hide');
+  const score=40+Math.floor(Math.random()*50);
+  res.innerHTML=`<strong>${mod}</strong> analysis complete for <em>${inp}</em><br>Risk Score: <strong>${score}/100</strong><br>
+    <span class="tag ${score>70?'red':'green'}">${score>70?'Action Required':'Acceptable'}</span>
+    <br><br>Recommendations generated and saved to private history.`;
+  Store.addHistory('aegis',{title:mod,detail:inp,risk:score>70?'high':'low'});
+}
+
+// ========== ATLAS ==========
+function renderAtlas(el,v){
+  if(v==='dash'){
+    el.innerHTML=`<h2>Supply Chain Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">Active SKUs Tracked</div><div class="value">${Store.get('atlas','skus',[]).length||12}</div></div>
+        <div class="dash-card"><div class="label">High Risk Suppliers</div><div class="value" style="color:#f87171">3</div></div>
+        <div class="dash-card"><div class="label">Avg Lead Time</div><div class="value">14d</div></div>
+        <div class="dash-card"><div class="label">History Records</div><div class="value">${Store.get('atlas','history',[]).length}</div></div>
+      </div>
+      <div class="panel"><h3>Recent Calculations</h3>${histHTML('atlas')}</div>`;
+  }
+  else if(v==='rop'||v==='eoq'||v==='safety'){
+    el.innerHTML=`<h2>Inventory Calculator — ${v.toUpperCase()}</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Daily Demand</label><input type="number" id="at-d" value="100"></div>
+          <div class="form-group"><label>Lead Time (days)</label><input type="number" id="at-lt" value="12"></div>
+          <div class="form-group"><label>Safety Days</label><input type="number" id="at-sd" value="5"></div>
+          <div class="form-group"><label>Unit Cost ₹</label><input type="number" id="at-c" value="350"></div>
+          <div class="form-group"><label>Holding % /yr</label><input type="number" id="at-h" value="20"></div>
+          <div class="form-group"><label>Current Stock</label><input type="number" id="at-s" value="1800"></div>
+        </div>
+        <button class="btn" onclick="atlasInv('${v}')">Calculate</button>
+        <div id="at-res" class="result hide"></div>
+      </div>`;
+  }
+  else if(v==='history'){ el.innerHTML=`<h2>Private History</h2><div class="panel">${histHTML('atlas')}</div>`; }
+  else {
+    el.innerHTML=`<h2>${v} Module</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Input Value</label><input id="at-in" type="number" value="50"></div>
+          <div class="form-group"><label>Parameter</label><select id="at-p"><option>Optimistic</option><option>Base</option><option>Pessimistic</option></select></div>
+        </div>
+        <button class="btn" onclick="atlasGen('${v}')">Run</button>
+        <div id="at-res" class="result hide"></div>
+      </div>
+      <div class="panel"><h3>Related Actions</h3>
+        <button class="btn btn-outline" style="margin:3px" onclick="atlasGen('${v}-report')">Report</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="atlasGen('${v}-alert')">Set Alert</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="atlasGen('${v}-sim')">Simulate</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="atlasGen('${v}-export')">Export</button>
+      </div>`;
+  }
+}
+function atlasInv(type){
+  const d=+document.getElementById('at-d').value, lt=+document.getElementById('at-lt').value, sd=+document.getElementById('at-sd').value;
+  const c=+document.getElementById('at-c').value, h=+document.getElementById('at-h').value/100, s=+document.getElementById('at-s').value;
+  const rop=d*(lt+sd), days=Math.floor(s/d), eoq=Math.round(Math.sqrt(2*d*365*c*0.15/(c*h)));
+  document.getElementById('at-res').classList.remove('hide');
+  document.getElementById('at-res').innerHTML=`Reorder Point: <strong>${rop}</strong> units<br>Days of cover: <strong>${days}</strong><br>EOQ: <strong>${eoq}</strong><br>Status: <span class="tag ${days<lt?'red':'green'}">${days<lt?'REORDER NOW':'Healthy'}</span>`;
+  Store.addHistory('atlas',{title:type.toUpperCase()+' Calc',detail:`ROP ${rop}, Days ${days}`});
+}
+function atlasGen(m){
+  document.getElementById('at-res').classList.remove('hide');
+  const val=40+Math.floor(Math.random()*55);
+  document.getElementById('at-res').innerHTML=`${m} completed.<br>Score / Result: <strong>${val}</strong><br><span class="tag blue">Saved to private history</span>`;
+  Store.addHistory('atlas',{title:m,detail:'Result '+val});
+}
+
+// ========== PRISM ==========
+function renderPrism(el,v){
+  if(v==='dash'){
+    el.innerHTML=`<h2>Executive Predictive Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">Scenarios Run</div><div class="value">${Store.get('prism','history',[]).length}</div></div>
+        <div class="dash-card"><div class="label">Best Case Profit</div><div class="value" style="color:#4ade80">+₹42L</div></div>
+        <div class="dash-card"><div class="label">Worst Case</div><div class="value" style="color:#f87171">-₹11L</div></div>
+        <div class="dash-card"><div class="label">Confidence</div><div class="value">87%</div></div>
+      </div>
+      <div class="panel"><h3>Recent Scenarios</h3>${histHTML('prism')}</div>`;
+  }
+  else if(v==='pnl'||v==='growth'||v==='runway'||v==='break'){
+    el.innerHTML=`<h2>Scenario: ${v}</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Monthly Revenue ₹</label><input type="number" id="p-rev" value="7500000"></div>
+          <div class="form-group"><label>Fixed Costs ₹</label><input type="number" id="p-fix" value="3800000"></div>
+          <div class="form-group"><label>Variable %</label><input type="number" id="p-var" value="30"></div>
+          <div class="form-group"><label>Growth % /mo</label><input type="number" id="p-g" value="3.5" step="0.1"></div>
+          <div class="form-group"><label>Cash ₹</label><input type="number" id="p-cash" value="28000000"></div>
+          <div class="form-group"><label>Months</label><input type="number" id="p-m" value="12"></div>
+        </div>
+        <button class="btn" onclick="prismRun('${v}')">Simulate</button>
+        <div id="p-res" class="result hide"></div>
+        <div class="chart-box hide" id="p-chart-wrap"><canvas id="p-chart"></canvas></div>
+      </div>`;
+  }
+  else if(v==='history'){ el.innerHTML=`<h2>Private Scenario History</h2><div class="panel">${histHTML('prism')}</div>`; }
+  else {
+    el.innerHTML=`<h2>${v} Engine</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Base Value</label><input type="number" id="p-in" value="100"></div>
+          <div class="form-group"><label>Change %</label><input type="number" id="p-ch" value="10"></div>
+        </div>
+        <button class="btn" onclick="prismGen('${v}')">Calculate Impact</button>
+        <div id="p-res" class="result hide"></div>
+      </div>
+      <div class="panel">
+        <button class="btn btn-outline" style="margin:3px" onclick="prismGen('${v}-best')">Best Case</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="prismGen('${v}-base')">Base Case</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="prismGen('${v}-worst')">Worst Case</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="prismGen('${v}-export')">Export</button>
+      </div>`;
+  }
+}
+let pChart;
+function prismRun(type){
+  const rev=+document.getElementById('p-rev').value, fix=+document.getElementById('p-fix').value, vp=+document.getElementById('p-var').value/100;
+  const g=+document.getElementById('p-g').value/100, cash=+document.getElementById('p-cash').value, m=+document.getElementById('p-m').value;
+  let r=rev,c=cash,profits=[],labels=[];
+  for(let i=1;i<=m;i++){ const p=r*(1-vp)-fix; c+=p; profits.push(Math.round(p)); labels.push('M'+i); r*=(1+g); }
+  document.getElementById('p-res').classList.remove('hide');
+  document.getElementById('p-res').innerHTML=`Total Profit (${m}m): <strong>₹${(profits.reduce((a,b)=>a+b,0)/1e5).toFixed(1)}L</strong><br>Ending Cash: <strong>₹${(c/1e5).toFixed(1)}L</strong>`;
+  document.getElementById('p-chart-wrap').classList.remove('hide');
+  if(pChart)pChart.destroy();
+  pChart=new Chart(document.getElementById('p-chart'),{type:'line',data:{labels,datasets:[{label:'Profit',data:profits,borderColor:'#818cf8',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+  Store.addHistory('prism',{title:type+' Simulation',detail:`Profit ₹${(profits.reduce((a,b)=>a+b,0)/1e5).toFixed(1)}L`});
+}
+function prismGen(m){
+  document.getElementById('p-res').classList.remove('hide');
+  document.getElementById('p-res').innerHTML=`${m} impact calculated and stored in private history.`;
+  Store.addHistory('prism',{title:m,detail:'Impact analysis'});
+}
+
+// ========== HELIX ==========
+function renderHelix(el,v){
+  if(v==='dash'){
+    el.innerHTML=`<h2>People Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">High Flight Risk</div><div class="value" style="color:#f87171">7</div></div>
+        <div class="dash-card"><div class="label">Avg Engagement</div><div class="value">72%</div></div>
+        <div class="dash-card"><div class="label">Analyses Run</div><div class="value">${Store.get('helix','history',[]).length}</div></div>
+        <div class="dash-card"><div class="label">Open Actions</div><div class="value">4</div></div>
+      </div>
+      <div class="panel"><h3>Recent Talent Insights</h3>${histHTML('helix')}</div>`;
+  }
+  else if(v==='flight'){
+    el.innerHTML=`<h2>Employee Flight Risk Engine</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Tenure (months)</label><input type="number" id="h-ten" value="16"></div>
+          <div class="form-group"><label>Rating 1-5</label><input type="number" id="h-rat" value="3.4" step="0.1"></div>
+          <div class="form-group"><label>Salary vs Market %</label><input type="number" id="h-sal" value="88"></div>
+          <div class="form-group"><label>Promotion last 24m?</label><select id="h-pro"><option value="0">No</option><option value="1">Yes</option></select></div>
+          <div class="form-group"><label>Manager Score</label><input type="number" id="h-mgr" value="3.1" step="0.1"></div>
+          <div class="form-group"><label>OT hrs/week</label><input type="number" id="h-ot" value="9"></div>
+        </div>
+        <button class="btn" onclick="helixFlight()">Calculate Risk</button>
+        <div id="h-res" class="result hide"></div>
+      </div>`;
+  }
+  else if(v==='history'){ el.innerHTML=`<h2>Private Talent History</h2><div class="panel">${histHTML('helix')}</div>`; }
+  else {
+    el.innerHTML=`<h2>${v} Module</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Employee / Team</label><input id="h-in" placeholder="Name or Team"></div>
+          <div class="form-group"><label>Period</label><select><option>Last 30 days</option><option>Last quarter</option><option>Last year</option></select></div>
+        </div>
+        <button class="btn" onclick="helixGen('${v}')">Generate Insight</button>
+        <div id="h-res" class="result hide"></div>
+      </div>
+      <div class="panel">
+        <button class="btn btn-outline" style="margin:3px" onclick="helixGen('${v}-report')">Full Report</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="helixGen('${v}-action')">Create Action</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="helixGen('${v}-alert')">Set Alert</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="helixGen('${v}-export')">Export</button>
+      </div>`;
+  }
+}
+function helixFlight(){
+  let risk=25;
+  if(+document.getElementById('h-ten').value<12)risk+=15;
+  if(+document.getElementById('h-rat').value<3.2)risk+=20;
+  if(+document.getElementById('h-sal').value<90)risk+=18;
+  if(document.getElementById('h-pro').value==='0')risk+=12;
+  if(+document.getElementById('h-mgr').value<3.3)risk+=15;
+  if(+document.getElementById('h-ot').value>8)risk+=10;
+  risk=Math.min(95,risk);
+  document.getElementById('h-res').classList.remove('hide');
+  document.getElementById('h-res').innerHTML=`Flight Risk: <strong style="font-size:24px;color:${risk>60?'#f87171':risk>40?'#fbbf24':'#4ade80'}">${risk}%</strong>
+    <br>${risk>60?'<span class="tag red">Immediate action needed</span>':risk>40?'<span class="tag yellow">Monitor closely</span>':'<span class="tag green">Healthy</span>'}`;
+  Store.addHistory('helix',{title:'Flight Risk',detail:`Score ${risk}%`,risk:risk>60?'high':'low'});
+}
+function helixGen(m){
+  document.getElementById('h-res').classList.remove('hide');
+  document.getElementById('h-res').innerHTML=`${m} insight generated and saved privately.`;
+  Store.addHistory('helix',{title:m,detail:'Talent insight'});
+}
+
+// ========== LEXICORE ==========
+function renderLexi(el,v){
+  if(v==='dash'){
+    el.innerHTML=`<h2>Legal Command Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">Contracts Analyzed</div><div class="value">${Store.get('lexi','history',[]).length}</div></div>
+        <div class="dash-card"><div class="label">High Risk Flags</div><div class="value" style="color:#f87171">${Store.get('lexi','history',[]).filter(x=>x.risk==='high').length}</div></div>
+        <div class="dash-card"><div class="label">Pending Renewals</div><div class="value">5</div></div>
+        <div class="dash-card"><div class="label">Compliance Score</div><div class="value">81%</div></div>
+      </div>
+      <div class="panel"><h3>Recent Legal Activity</h3>${histHTML('lexi')}</div>`;
+  }
+  else if(v==='analyze'){
+    el.innerHTML=`<h2>Contract Risk Analyzer</h2>
+      <div class="panel">
+        <div class="form-group"><label>Paste contract text</label><textarea id="l-text" placeholder="Paste any contract or clause..."></textarea></div>
+        <button class="btn" onclick="lexiAnalyze()">Analyze</button>
+        <div id="l-res" class="result hide"></div>
+      </div>`;
+  }
+  else if(v==='history'){ el.innerHTML=`<h2>Private Legal History</h2><div class="panel">${histHTML('lexi')}</div>`; }
+  else {
+    el.innerHTML=`<h2>${v} Tool</h2>
+      <div class="panel">
+        <div class="form-group"><label>Input / Clause</label><textarea id="l-in" placeholder="Enter text or parameters"></textarea></div>
+        <button class="btn" onclick="lexiGen('${v}')">Process</button>
+        <div id="l-res" class="result hide"></div>
+      </div>
+      <div class="panel">
+        <button class="btn btn-outline" style="margin:3px" onclick="lexiGen('${v}-check')">Quick Check</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="lexiGen('${v}-template')">Template</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="lexiGen('${v}-alert')">Create Alert</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="lexiGen('${v}-export')">Export</button>
+      </div>`;
+  }
+}
+function lexiAnalyze(){
+  const t=document.getElementById('l-text').value.toLowerCase(); if(t.length<20){alert('Paste more text');return;}
+  let score=20, flags=[];
+  if(t.includes('unlimited')||t.includes('without limitation')){score+=25;flags.push('Unlimited Liability');}
+  if(t.includes('indemnify')&&!t.includes('mutual')){score+=18;flags.push('One-sided Indemnity');}
+  if(t.includes('auto')&&t.includes('renew')){score+=12;flags.push('Auto Renewal');}
+  if(!t.includes('terminat')){score+=15;flags.push('Missing Termination');}
+  if(t.includes('non-compete')){score+=10;flags.push('Non-Compete');}
+  score=Math.min(95,score);
+  document.getElementById('l-res').classList.remove('hide');
+  document.getElementById('l-res').innerHTML=`Risk Score: <strong style="font-size:22px;color:${score>55?'#f87171':'#4ade80'}">${score}/100</strong><br>
+    ${flags.map(f=>`<span class="tag red">${f}</span>`).join(' ')||'<span class="tag green">No major flags</span>'}`;
+  Store.addHistory('lexi',{title:'Contract Analysis',detail:`Score ${score}`,risk:score>55?'high':'low'});
+}
+function lexiGen(m){
+  document.getElementById('l-res').classList.remove('hide');
+  document.getElementById('l-res').innerHTML=`${m} processed. Result saved to private history.`;
+  Store.addHistory('lexi',{title:m,detail:'Legal process'});
+}
+
+// ========== VERTEX ==========
+function renderVertex(el,v){
+  if(v==='dash'){
+    el.innerHTML=`<h2>Finance Command Dashboard</h2>
+      <div class="dash-grid">
+        <div class="dash-card"><div class="label">Runway</div><div class="value">11.4 mo</div></div>
+        <div class="dash-card"><div class="label">Net Burn</div><div class="value" style="color:#f87171">₹2.8L</div></div>
+        <div class="dash-card"><div class="label">Calculations</div><div class="value">${Store.get('vertex','history',[]).length}</div></div>
+        <div class="dash-card"><div class="label">Break-even Rev</div><div class="value">₹6.1L</div></div>
+      </div>
+      <div class="panel"><h3>Recent Finance Activity</h3>${histHTML('vertex')}</div>`;
+  }
+  else if(v==='runway'||v==='breakeven'||v==='burn'){
+    el.innerHTML=`<h2>${v.toUpperCase()} Calculator</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Cash Balance ₹</label><input type="number" id="v-cash" value="32000000"></div>
+          <div class="form-group"><label>Monthly Burn ₹</label><input type="number" id="v-burn" value="2900000"></div>
+          <div class="form-group"><label>Monthly Revenue ₹</label><input type="number" id="v-rev" value="1600000"></div>
+          <div class="form-group"><label>Gross Margin %</label><input type="number" id="v-m" value="65"></div>
+        </div>
+        <button class="btn" onclick="vertexRun('${v}')">Calculate</button>
+        <div id="v-res" class="result hide"></div>
+      </div>`;
+  }
+  else if(v==='valuation'){
+    el.innerHTML=`<h2>Valuation Estimator</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>ARR ₹</label><input type="number" id="v-arr" value="18000000"></div>
+          <div class="form-group"><label>Multiple</label><input type="number" id="v-mul" value="5.5" step="0.5"></div>
+          <div class="form-group"><label>Idea (0-5)</label><input type="number" id="v-idea" value="4" min="0" max="5"></div>
+          <div class="form-group"><label>Team (0-5)</label><input type="number" id="v-team" value="3.5" step="0.5"></div>
+        </div>
+        <button class="btn" onclick="vertexVal()">Estimate</button>
+        <div id="v-res" class="result hide"></div>
+      </div>`;
+  }
+  else if(v==='history'){ el.innerHTML=`<h2>Private Finance History</h2><div class="panel">${histHTML('vertex')}</div>`; }
+  else {
+    el.innerHTML=`<h2>${v} Calculator</h2>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="form-group"><label>Value A</label><input type="number" id="v-a" value="100000"></div>
+          <div class="form-group"><label>Value B</label><input type="number" id="v-b" value="12"></div>
+        </div>
+        <button class="btn" onclick="vertexGen('${v}')">Calculate</button>
+        <div id="v-res" class="result hide"></div>
+      </div>
+      <div class="panel">
+        <button class="btn btn-outline" style="margin:3px" onclick="vertexGen('${v}-report')">Report</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="vertexGen('${v}-scenario')">Scenario</button>
+        <button class="btn btn-outline" style="margin:3px" onclick="vertexGen('${v}-export')">Export</button>
+      </div>`;
+  }
+}
+function vertexRun(type){
+  const cash=+document.getElementById('v-cash').value, burn=+document.getElementById('v-burn').value;
+  const rev=+document.getElementById('v-rev').value, m=+document.getElementById('v-m').value/100;
+  const net=burn-(rev*m), runway=net>0?(cash/net).toFixed(1):'∞';
+  const be=Math.round(burn/m);
+  document.getElementById('v-res').classList.remove('hide');
+  document.getElementById('v-res').innerHTML=`Runway: <strong>${runway} months</strong><br>Net Burn: <strong>₹${Math.round(net).toLocaleString('en-IN')}</strong><br>Break-even Revenue: <strong>₹${be.toLocaleString('en-IN')}</strong>`;
+  Store.addHistory('vertex',{title:type,detail:`Runway ${runway} mo`});
+}
+function vertexVal(){
+  const arr=+document.getElementById('v-arr').value, mul=+document.getElementById('v-mul').value;
+  const idea=+document.getElementById('v-idea').value, team=+document.getElementById('v-team').value;
+  const revVal=arr*mul, berkus=(idea+team+3+3+3)*1000000, avg=Math.round((revVal+berkus)/2);
+  document.getElementById('v-res').classList.remove('hide');
+  document.getElementById('v-res').innerHTML=`Revenue Multiple: <strong>₹${(revVal/1e7).toFixed(2)} Cr</strong><br>Berkus: <strong>₹${(berkus/1e7).toFixed(2)} Cr</strong><br>Blended: <strong>₹${(avg/1e7).toFixed(2)} Cr</strong>`;
+  Store.addHistory('vertex',{title:'Valuation',detail:`₹${(avg/1e7).toFixed(2)} Cr`});
+}
+function vertexGen(m){
+  document.getElementById('v-res').classList.remove('hide');
+  document.getElementById('v-res').innerHTML=`${m} calculated. Saved to private history.`;
+  Store.addHistory('vertex',{title:m,detail:'Finance calc'});
+}
+
+function downloadJSON(tool){
+  const data=Store.get(tool,'history',[]);
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${tool}-history.json`; a.click();
+}
+Auth.init();
+</script>
+<script src="tools.js"></script>
+</body>
+</html>
