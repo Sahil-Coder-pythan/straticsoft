@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block body %}<div class="box"><h2>{{p.title}}</h2><p class="price">{{cur}}{{p.price}}</p>
+<p>{{p.description}}</p><p>Seller: {{p.seller.shop_name or 'Shop'}} · Stock: {{p.stock}}</p>
+{% if user and user.role=='customer' and p.stock>0 %}<form method="post" action="/cart/add/{{p.id}}"><input type="hidden" name="csrf" value="{{token}}"><button>Add to cart</button></form>
+{% elif not user %}<a class="btn" href="/login">Login to buy</a>{% elif p.stock<=0 %}Out of stock{% endif %}</div>{% endblock %}
