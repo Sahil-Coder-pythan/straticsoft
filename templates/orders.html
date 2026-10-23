@@ -1,2 +1,0 @@
-{% extends "base.html" %}{% block body %}<h2>My orders</h2>{% for o in orders %}<div class="box" style="margin-bottom:10px"><b>Order #{{o.id}}</b> · {{cur}}{{o.total}}<table>
-{% for i in o.items %}<tr><td>{{i.product.title}} ×{{i.qty}}</td><td>{{i.status}}</td><td>{% if i.status=='placed' %}<form class="inline" method="post" action="/orders/cancel/{{i.id}}"><input type="hidden" name="csrf" value="{{token}}"><button>Cancel</button></form>{% endif %}</td></tr>{% endfor %}</table></div>{% else %}<p>No orders yet.</p>{% endfor %}{% endblock %}

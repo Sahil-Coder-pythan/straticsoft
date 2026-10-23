@@ -1,9 +1,0 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Stratic Global Market</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head><body>
-<header><a class="logo" href="/">🌍 Stratic Global Market</a>
-{% if user %}<span>{{ markets[m][0] }}</span>{% else %}
-<select onchange="location='/market/'+this.value">{% for k,v in markets.items() %}<option value="{{k}}" {{'selected' if k==m}}>{{v[0]}}</option>{% endfor %}</select>{% endif %}
-{% if user %}{% if user.role=='seller' %}<a href="/seller">Dashboard</a>{% else %}<a href="/cart">Cart ({{cart_n}})</a><a href="/orders">Orders</a>{% endif %}<a href="/logout">Logout</a>
-{% else %}<a href="/login">Login</a><a href="/register">Register</a>{% endif %}</header>
-<main>{% for msg in get_flashed_messages() %}<div class="flash">{{msg}}</div>{% endfor %}{% block body %}{% endblock %}</main>
-<footer>Stratic Global Market — pilot version. Cash on delivery only; no online payments yet.</footer></body></html>
