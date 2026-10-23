@@ -1,4 +1,0 @@
-{% extends "base.html" %}{% block body %}<div class="box"><h2>Cart</h2><table>{% for p,q in lines %}<tr><td>{{p.title}} ×{{q}}</td><td>{{cur}}{{p.price*q}}</td>
-<td><form class="inline" method="post" action="/cart/remove/{{p.id}}"><input type="hidden" name="csrf" value="{{token}}"><button>Remove</button></form></td></tr>{% endfor %}</table>
-<p class="price">Total: {{cur}}{{total}} (Cash on delivery; seller sets delivery terms)</p>
-{% if lines %}<form class="stack" method="post" action="/checkout"><input type="hidden" name="csrf" value="{{token}}"><textarea name="address" placeholder="Full delivery address" required></textarea><button>Place order</button></form>{% endif %}</div>{% endblock %}

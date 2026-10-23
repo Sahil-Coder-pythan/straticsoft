@@ -1,6 +1,0 @@
-{% extends "base.html" %}{% block body %}
-<form class="bar" method="get"><input name="q" value="{{s}}" placeholder="Search products">
-<select name="cat"><option value="">All categories</option>{% for x in categories %}<option {{'selected' if x==c}}>{{x}}</option>{% endfor %}</select>
-<select name="sort"><option value="">Newest</option><option value="low" {{'selected' if sort=='low'}}>Price: low</option><option value="high" {{'selected' if sort=='high'}}>Price: high</option></select><button>Search</button></form>
-<div class="grid">{% for p in products %}<a class="card" href="/product/{{p.id}}" style="text-decoration:none;color:inherit"><b>{{p.title}}</b><br><small>{{p.category}} · {{p.seller.shop_name or 'Shop'}}</small><div class="price">{{cur}}{{p.price}}</div></a>
-{% else %}<p>No products in {{markets[m][0]}} yet. Sellers from this country can add some.</p>{% endfor %}</div>{% endblock %}
