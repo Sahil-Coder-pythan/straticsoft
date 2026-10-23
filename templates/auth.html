@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block body %}<div class="box" style="max-width:420px;margin:auto"><h2>{{'Register' if mode=='register' else 'Login'}}</h2>
+<form class="stack" method="post"><input type="hidden" name="csrf" value="{{token}}">
+<input name="email" type="email" placeholder="Email" required><input name="password" type="password" placeholder="Password (min 8)" required>
+{% if mode=='register' %}<select name="country">{% for k,v in markets.items() %}<option value="{{k}}">{{v[0]}}</option>{% endfor %}</select>
+<select name="role"><option value="customer">I want to buy</option><option value="seller">I want to sell</option></select>
+<input name="shop_name" placeholder="Shop name (sellers only)">{% endif %}<button>Submit</button></form></div>{% endblock %}

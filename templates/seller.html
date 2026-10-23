@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block body %}<h2>{{user.shop_name or 'My shop'}} — {{markets[m][0]}}</h2>
+<div class="box"><h3>Add product</h3><form class="stack" method="post" action="/seller/add"><input type="hidden" name="csrf" value="{{token}}">
+<input name="title" placeholder="Title" required><textarea name="description" placeholder="Description"></textarea>
+<input name="price" type="number" step="0.01" placeholder="Price" required><input name="stock" type="number" placeholder="Stock" required>
+<select name="category">{% for x in categories %}<option>{{x}}</option>{% endfor %}</select><button>Add</button></form></div><br>
+<div class="box"><h3>My products</h3><table>{% for p in prods %}<tr><td>{{p.title}}</td><td>{{cur}}{{p.price}}</td><td>{{p.stock}}</td><td>{{'Live' if p.active else 'Paused'}}</td>
+<td><form class="inline" method="post" action="/seller/toggle/{{p.id}}"><input type="hidden" name="csrf" value="{{token}}"><button>{{'Pause' if p.active else 'Resume'}}</button></form></td></tr>{% endfor %}</table></div><br>
+<div class="box"><h3>Orders</h3><table>{% for i in items %}<tr><td>#{{i.order_id}} {{i.product.title}} ×{{i.qty}}</td><td>{{i.order.address}}</td><td>{{i.status}}</td><td>
+{% for a,l,s in [('accept','Accept','placed'),('reject','Reject','placed'),('deliver','Delivered','accepted')] %}{% if i.status==s %}<form class="inline" method="post" action="/seller/item/{{i.id}}/{{a}}"><input type="hidden" name="csrf" value="{{token}}"><button>{{l}}</button></form> {% endif %}{% endfor %}</td></tr>{% endfor %}</table></div>{% endblock %}
