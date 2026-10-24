@@ -1,0 +1,7 @@
+Render Free deploy fix
+======================
+This change fixes the startup crash caused by trying to create /var/data/stratic-market/images when no Persistent Disk is mounted.
+
+On Render Free, the store now uses /tmp/stratic-market unless DATA_DIR is explicitly set. This is only a startup workaround. /tmp is ephemeral; products, accounts, orders, stats, and uploaded images may disappear after restart/redeploy. DATABASE_URL/Neon is not automatically used by this JSON file store. Do not treat this build as production-ready for persistent customer data until the shop-store is migrated to PostgreSQL and image uploads use persistent object storage.
+
+No visual/UI files were intentionally changed.
