@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="<%= lang %>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131921">
+<title>Stratic Market</title>
+<link rel="stylesheet" href="/static/css/shop.css">
+</head>
+<body>
+<header class="am-top">
+  <div class="am-logo">stratic<span>market</span></div>
+  <div class="am-top-right">
+    <button type="button" id="open-help" class="am-help-btn" aria-label="Help">?</button>
+    <button type="button" id="top-avatar" class="am-avatar" aria-label="Account" title="Account">?</button>
+    <a class="am-cart-top" id="open-cart" href="#" aria-label="Cart">🛒<b id="cart-n">0</b></a>
+  </div>
+</header>
+<div class="am-search-wrap">
+  <input id="q" type="search" placeholder="Search Stratic Market" aria-label="Search">
+</div>
+<div class="am-cats" id="tabs"></div>
+<div class="am-bar">
+  <h1 id="head">All products</h1>
+  <select id="sort" aria-label="Sort">
+    <option value="new">Sort: Newest</option>
+    <option value="lo">Price: low to high</option>
+    <option value="hi">Price: high to low</option>
+  </select>
+</div>
+<main id="grid" class="am-grid">
+  <p class="am-empty">Loading products…<br><small>First open can take 30–60 sec on free server</small></p>
+</main>
+
+<nav class="am-nav">
+  <a href="/shop" class="on" data-tab="home" id="nav-home"><span class="ni">⌂</span><span>Home</span></a>
+  <a href="#" data-tab="cats" id="nav-cats"><span class="ni">▦</span><span>Categories</span></a>
+  <button type="button" id="open-sell" class="am-plus" aria-label="Sell product">+</button>
+  <a href="#" id="open-cart2"><span class="ni">🛒</span><span>Cart</span><b id="cart-n2" class="nav-badge">0</b></a>
+  <a href="#" id="open-acc"><span class="ni">👤</span><span>Profile</span></a>
+</nav>
+
+<dialog id="cats-dlg">
+  <div class="am-row"><h2>Categories</h2><button type="button" id="cats-close" class="am-x">✕</button></div>
+  <div class="cat-list" id="cat-list">
+    <button type="button" data-c="All" class="cat-item on">All products</button>
+    <button type="button" data-c="Mobiles" class="cat-item">Mobiles</button>
+    <button type="button" data-c="Fashion" class="cat-item">Fashion</button>
+    <button type="button" data-c="Electronics" class="cat-item">Electronics</button>
+    <button type="button" data-c="Home & Kitchen" class="cat-item">Home & Kitchen</button>
+    <button type="button" data-c="Other" class="cat-item">Other</button>
+  </div>
+</dialog>
+
+<dialog id="ok-order">
+  <div class="ok-wrap">
+    <div class="ok-check">✓</div>
+    <h2>Order confirmed!</h2>
+    <p id="ok-ref" class="ok-ref"></p>
+    <p class="am-note">Cash on Delivery · Seller will contact you</p>
+    <button type="button" id="ok-view" class="am-btn y" style="width:100%;margin-top:12px">View my orders</button>
+    <button type="button" id="ok-close" class="am-btn dark" style="width:100%;margin-top:8px">Continue shopping</button>
+  </div>
+</dialog>
+
+<dialog id="sell">
+<form id="sell-form">
+  <div class="am-row"><h2>Sell a product</h2><button type="button" id="sell-close" class="am-x">✕</button></div>
+  <div class="am-photo">
+    <img id="prev" alt="" hidden>
+    <div id="prev-t" class="am-pick">
+      <label class="am-pb">📷 Camera<input type="file" id="photo-cam" accept="image/*" hidden></label>
+      <label class="am-pb">🖼 Gallery<input type="file" id="photo-gal" accept="image/*" hidden></label>
+    </div>
+  </div>
+  <label class="am-chk"><input type="checkbox" id="rm" checked> Auto white background (Amazon look)</label>
+  <p id="proc" role="status"></p>
+  <label>Product name<input name="title" maxlength="140" required placeholder="e.g. Wireless Headphones"></label>
+  <div class="am-2">
+    <label>Price<input name="price" type="number" min="1" step="any" required></label>
+    <label>MRP (optional)<input name="mrp" type="number" min="1" step="any" placeholder="Original price"></label>
+  </div>
+  <label>Category
+    <select name="category">
+      <option>Mobiles</option><option>Fashion</option><option>Electronics</option>
+      <option>Home &amp; Kitchen</option><option>Other</option>
+    </select>
+  </label>
+  <label>Description<textarea name="description" maxlength="500" rows="2" placeholder="Condition, details…"></textarea></label>
+  <label>Expiry date (if any)
+    <input name="expiresAt" type="date" id="expiresAt">
+  </label>
+  <p class="am-warn">⚠️ Do not list expired products. Expired items are rejected. Listing them can lead to account action / case.</p>
+  <label>Your name / shop<input name="seller" maxlength="60" required></label>
+  <label>Mobile number<input name="phone" type="tel" maxlength="20" required placeholder="10-digit number"></label>
+  <label>Address<textarea name="address" maxlength="300" rows="2" required></textarea></label>
+  <label>Currency
+    <select name="currency">
+      <option value="INR" selected>₹ INR</option>
+      <option value="USD">$ USD</option>
+      <option value="EUR">€ EUR</option>
+      <option value="GBP">£ GBP</option>
+    </select>
+  </label>
+  <p id="sell-msg" role="status"></p>
+  <div class="am-row">
+    <button type="button" id="sell-cancel" class="am-btn dark">Cancel</button>
+    <button type="submit" class="am-btn y">Post product</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="buy">
+  <div class="am-row"><h2>Buy Now</h2><button type="button" id="buy-close" class="am-x">✕</button></div>
+  <p class="am-t" id="buy-title"></p>
+  <p class="am-price"><b id="buy-price"></b></p>
+  <p class="am-s" id="buy-seller"></p>
+  <div class="buy-box">
+    <div class="buy-label">Seller phone number</div>
+    <div class="buy-phone" id="buy-phone">—</div>
+    <p class="am-note">No online payment yet. Call / WhatsApp the seller. Cash on Delivery can be arranged with them.</p>
+    <div class="am-btns" style="margin-top:12px">
+      <a id="buy-call" class="am-btn y" style="text-align:center;text-decoration:none">📞 Call</a>
+      <a id="buy-wa" class="am-btn" style="background:#25d366;color:#fff;text-align:center;text-decoration:none">WhatsApp</a>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="cart">
+  <div class="am-row"><h2>Your cart</h2><button type="button" id="cart-close" class="am-x">✕</button></div>
+  <div id="cart-list"></div>
+  <p class="am-note">Payment: Cash on Delivery. Cart saved on this phone.</p>
+</dialog>
+
+<dialog id="acc">
+  <div class="am-row"><h2>Account</h2><button type="button" id="acc-close" class="am-x">✕</button></div>
+  <div id="acc-body"></div>
+</dialog>
+
+<dialog id="co">
+<form id="co-form">
+  <div class="am-row"><h2>Delivery details</h2><button type="button" id="co-close" class="am-x">✕</button></div>
+  <label>Full name<input name="name" maxlength="80" required></label>
+  <label>Phone<input name="phone" type="tel" maxlength="20" required></label>
+  <label>Address<textarea name="address" maxlength="300" rows="2" required></textarea></label>
+  <div class="am-2">
+    <label>City<input name="city" maxlength="80" required></label>
+    <label>Pincode<input name="pincode" maxlength="20" required></label>
+  </div>
+  <label>Country<input name="country" maxlength="80" required value="India"></label>
+  <p class="am-note"><b>Cash on Delivery</b>. Seller will confirm.</p>
+  <p id="co-msg" role="status"></p>
+  <button type="submit" class="am-btn y" style="width:100%">Place order</button>
+</form>
+</dialog>
+
+<dialog id="ord">
+  <div class="am-row"><h2 id="ord-h">Orders</h2><button type="button" id="ord-close" class="am-x">✕</button></div>
+  <div id="ord-body"></div>
+</dialog>
+
+<div id="auth" class="au" hidden>
+  <a href="#" id="au-skip" class="au-skip">Skip sign in ›</a>
+  <div class="au-logo">stratic<span>market</span></div>
+  <form id="au-form" class="au-card">
+    <h1 id="au-h">Sign in</h1>
+    <label id="au-name-l" hidden>Your name<input name="name" maxlength="60" autocomplete="name"></label>
+    <label>Email<input name="email" type="email" required autocomplete="email"></label>
+    <label>Password<input name="password" type="password" minlength="6" required autocomplete="current-password"></label>
+    <label id="au-phone-l" hidden>Mobile number<input name="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="+91..."></label>
+    <label id="au-country-l" hidden>Country
+      <select name="country">
+        <option value="IN">India</option>
+        <option value="US">United States</option>
+        <option value="GB">United Kingdom</option>
+        <option value="AE">UAE</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </label>
+    <label id="au-lang-l" hidden>Language
+      <select name="lang">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+        <option value="ta">தமிழ்</option>
+        <option value="te">తెలుగు</option>
+        <option value="mr">मराठी</option>
+      </select>
+    </label>
+    <p id="au-m" role="status"></p>
+    <button id="au-go" class="au-btn" type="submit">Continue</button>
+    <a href="/shop/api/google/start" class="au-btn" id="au-google" style="display:block;text-align:center;margin-top:10px;background:#fff;color:#222;border:1px solid #ddd;text-decoration:none">Continue with Google</a>
+    <p class="au-note">New? <a href="#" id="au-sw">Create your account</a></p>
+    <p class="au-note" style="font-size:11px;color:#666">One mobile number = one account. You cannot buy your own products by switching Gmail.</p>
+  </form>
+</div>
+
+<dialog id="gphone">
+<form id="gphone-form">
+  <div class="am-row"><h2>Complete profile</h2></div>
+  <p class="am-note">Google sign-in needs your mobile + country (one number per account).</p>
+  <label>Mobile number<input name="phone" type="tel" required maxlength="20" placeholder="+91..."></label>
+  <label>Country
+    <select name="country">
+      <option value="IN">India</option>
+      <option value="US">United States</option>
+      <option value="GB">United Kingdom</option>
+      <option value="AE">UAE</option>
+      <option value="OTHER">Other</option>
+    </select>
+  </label>
+  <label>Language
+    <select name="lang">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="ta">தமிழ்</option>
+      <option value="te">తెలుగు</option>
+    </select>
+  </label>
+  <p id="gphone-msg" role="status"></p>
+  <button type="submit" class="am-btn y" style="width:100%">Save & continue</button>
+</form>
+</dialog>
+
+<dialog id="help-dlg">
+  <div class="am-row"><h2>Help — How Stratic works</h2><button type="button" id="help-close" class="am-x">✕</button></div>
+  <div class="help-body" style="font-size:14px;line-height:1.55;padding:8px 0;max-height:70vh;overflow:auto">
+    <h3 style="margin:12px 0 6px;color:#c45500">Sell a product</h3>
+    <ol style="padding-left:18px">
+      <li>Tap the orange <b>+</b> button in the bottom bar.</li>
+      <li>Choose photo (Camera or Gallery). Optional: Auto white background.</li>
+      <li>Fill name, price, category, mobile, address.</li>
+      <li>Tap <b>Post product</b> — it shows to buyers in your country.</li>
+    </ol>
+    <h3 style="margin:12px 0 6px;color:#c45500">Buy / Order</h3>
+    <ol style="padding-left:18px">
+      <li>Open any product → <b>Add to Cart</b> or <b>Buy Now</b>.</li>
+      <li>Buy Now shows seller phone — call / WhatsApp them.</li>
+      <li>Place order from Cart for a confirmation + order ID.</li>
+      <li>You cannot buy your own product (same mobile number).</li>
+    </ol>
+    <h3 style="margin:12px 0 6px;color:#c45500">Account &amp; safety</h3>
+    <ul style="padding-left:18px">
+      <li>One mobile number = one account. Switching Gmail does not let you buy your own listings.</li>
+      <li>Products stay in the same country only (India ↔ India, etc.).</li>
+      <li>Do not list expired goods — they get rejected.</li>
+      <li>Stay logged in until you tap Logout in Profile.</li>
+    </ul>
+    <h3 style="margin:12px 0 6px;color:#c45500">Profile</h3>
+    <p>Bottom <b>Profile</b> or top letter icon → My listings, My orders, Logout.</p>
+    <p style="margin-top:12px;color:#666;font-size:12px">Questions? Contact the seller directly via the phone shown on Buy Now.</p>
+  </div>
+</dialog>
+
+<script src="/static/js/shop.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stratic Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f1111;color:#eee;min-height:100vh;padding:16px}
+.box{max-width:420px;margin:48px auto;background:#1a1a1a;border-radius:16px;padding:28px;border:1px solid #2a2a2a}
+h1{font-size:22px;margin-bottom:6px;color:#ff9900}
+.sub{color:#888;font-size:13px;margin-bottom:18px;line-height:1.4}
+input{width:100%;padding:14px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;margin:8px 0;font-size:16px}
+input:focus{outline:2px solid #ff9900;border-color:transparent}
+button{width:100%;padding:14px;border-radius:10px;border:0;background:#ff9900;color:#111;font-weight:700;font-size:16px;cursor:pointer;margin-top:8px}
+button:active{transform:scale(.98);filter:brightness(.92)}
+button:disabled{opacity:.6}
+.err{color:#ff6b6b;font-size:14px;min-height:20px;margin-top:8px}
+.hint{font-size:12px;color:#666;margin-top:14px;line-height:1.45}
+#dash{max-width:960px;margin:0 auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:18px}
+.card b{display:block;font-size:30px;color:#ff9900;margin-bottom:4px}
+.card span{font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:.04em}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+td,th{padding:10px 8px;border-bottom:1px solid #2a2a2a;text-align:left}
+th{color:#ff9900;font-weight:600}
+.section{margin:24px 0}
+.section h2{font-size:16px;color:#ff9900;margin-bottom:8px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.top h1{margin:0}
+.logout{width:auto;padding:8px 14px;font-size:13px;background:#333;color:#fff}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="login" class="box">
+  <h1>Private Dashboard</h1>
+  <p class="sub">Password protected. Only you should open this page.</p>
+  <form id="f" autocomplete="off">
+    <input type="password" id="pass" name="admin_pass" placeholder="Admin password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button type="submit" id="go">Unlock</button>
+  </form>
+  <div class="err" id="err"></div>
+  <p class="hint">
+    Password = Render Environment me ADMIN_PASSWORD<br>
+    Agar set nahi hai to default long password pura paste karo (bina space/newline).
+  </p>
+</div>
+
+<div id="dash" class="hidden">
+  <div class="top">
+    <h1>Stratic Live Stats</h1>
+    <button type="button" class="logout" id="logout">Lock</button>
+  </div>
+  <div class="grid">
+    <div class="card"><b id="u">0</b><span>Users</span></div>
+    <div class="card"><b id="p">0</b><span>Products</span></div>
+    <div class="card"><b id="o">0</b><span>Orders</span></div>
+    <div class="card"><b id="c">0</b><span>Countries</span></div>
+  </div>
+  <div class="section">
+    <h2>By country</h2>
+    <table><thead><tr><th>Country</th><th>Products</th><th>Orders</th></tr></thead><tbody id="byc"></tbody></table>
+  </div>
+  <div class="section">
+    <h2>Recent products</h2>
+    <table><thead><tr><th>Title</th><th>Country</th><th>Price</th><th>When</th></tr></thead><tbody id="rp"></tbody></table>
+  </div>
+  <div class="section">
+    <h2>Recent orders</h2>
+    <table><thead><tr><th>Ref</th><th>Country</th><th>Total</th><th>Status</th></tr></thead><tbody id="ro"></tbody></table>
+  </div>
+</div>
+
+<script>
+(function(){
+  var err = document.getElementById('err');
+  var login = document.getElementById('login');
+  var dash = document.getElementById('dash');
+
+  function showDash(){ login.classList.add('hidden'); dash.classList.remove('hidden'); load(); }
+  function showLogin(){ dash.classList.add('hidden'); login.classList.remove('hidden'); }
+
+  document.getElementById('f').onsubmit = function(e){
+    e.preventDefault();
+    err.textContent = '';
+    var pass = (document.getElementById('pass').value || '').trim();
+    if (!pass) { err.textContent = 'Password enter karo'; return; }
+    var btn = document.getElementById('go');
+    btn.disabled = true; btn.textContent = 'Checking…';
+    fetch('/shop/api/admin/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'x-sgm': '1' },
+      body: JSON.stringify({ password: pass })
+    })
+    .then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.error || ('HTTP '+r.status)); return d; }); })
+    .then(function(){ showDash(); })
+    .catch(function(e){ err.textContent = e.message || 'Wrong password'; })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Unlock'; });
+  };
+
+  document.getElementById('logout').onclick = function(){
+    fetch('/shop/api/admin/logout', { method: 'POST', credentials: 'same-origin', headers: { 'x-sgm': '1' } })
+      .finally(function(){ showLogin(); document.getElementById('pass').value=''; });
+  };
+
+  function load(){
+    fetch('/shop/api/admin/stats', { credentials: 'same-origin' })
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(d){
+        document.getElementById('u').textContent = d.users || 0;
+        document.getElementById('p').textContent = d.products || 0;
+        document.getElementById('o').textContent = d.orders || 0;
+        var keys = Object.keys(d.byCountry || {});
+        document.getElementById('c').textContent = keys.length;
+        var byc = document.getElementById('byc'); byc.innerHTML = '';
+        keys.forEach(function(k){
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>'+k+'</td><td>'+(d.byCountry[k].products||0)+'</td><td>'+(d.byCountry[k].orders||0)+'</td>';
+          byc.appendChild(tr);
+        });
+        var rp = document.getElementById('rp'); rp.innerHTML = '';
+        (d.recentProducts || []).forEach(function(p){
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>'+(p.title||'')+'</td><td>'+(p.country||'')+'</td><td>'+(p.currency||'')+' '+(p.price||'')+'</td><td>'+new Date(p.createdAt).toLocaleString()+'</td>';
+          rp.appendChild(tr);
+        });
+        var ro = document.getElementById('ro'); ro.innerHTML = '';
+        (d.recentOrders || []).forEach(function(o){
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>'+(o.ref||'')+'</td><td>'+(o.country||'')+'</td><td>'+(o.currency||'')+' '+(o.total||'')+'</td><td>'+(o.status||'')+'</td>';
+          ro.appendChild(tr);
+        });
+      })
+      .catch(function(){ err.textContent = 'Session expired — unlock again'; showLogin(); });
+  }
+
+  fetch('/shop/api/admin/stats', { credentials: 'same-origin' })
+    .then(function(r){ if (r.ok) showDash(); })
+    .catch(function(){});
+})();
+</script>
+</body>
+</html>
