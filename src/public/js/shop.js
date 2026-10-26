@@ -273,9 +273,9 @@ function setAvatar(user){
     var h = el('section', 'pz-hero'); h.id = 'pz-hero';
     h.append(
       el('div', 'pz-kicker', T('YOUR BUSINESS. YOUR BIG MOMENT.', 'दुकानदारों के नाम एक पैग़ाम')),
-      el('div', 'pz-h1', T('Small shop. Big dreams. Unlimited possibilities.', 'छोटी दुकान, बड़े अरमान—मेहनत से बनेगी पहचान!')),
-      el('div', 'pz-h2', T('List your products and let your business reach new customers.', 'आज अपना सामान सजाइए, कल अपनी पहचान बनाइए। आपकी मेहनत को मिले नया बाज़ार, आपके सपनों को मिले नई उड़ान!')),
-      el('div', 'pz-motto', T('Your hard work deserves a bigger market.', 'हर छोटा दुकानदार बड़ा बन सकता है—शुरुआत आज से करें।'))
+      el('div', 'pz-h1', T('Small shop. Big dreams. Unlimited possibilities.')),
+      el('div', 'pz-h2', T('Reach customers across India—from big cities to small towns.', 'भारत के बड़े शहरों से छोटे कस्बों तक—अपने प्रोडक्ट नए ग्राहकों तक पहुँचाने की शुरुआत करें।')),
+      el('div', 'pz-motto', T('100% India-wide opportunity. Bring your shop online today.', 'भारतभर में नए ग्राहकों तक पहुँचने का मौका—अपनी दुकान आज ही ऑनलाइन लाएँ!'))
     );
     var b = el('button', 'pz-hb', '✦  ' + T('Bring your shop online', 'अपनी दुकान ऑनलाइन लाएँ') + '  →'); b.type = 'button'; b.onclick = openSellFromPromo; h.appendChild(b);
     t.parentNode.insertBefore(h, t);
