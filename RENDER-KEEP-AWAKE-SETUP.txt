@@ -1,0 +1,21 @@
+STRATIC MARKET — CRON-JOB.ORG KEEP-AWAKE SETUP
+================================================
+
+The app exposes a lightweight health-check endpoint:
+  GET /health
+
+After deploying to Render, create a job at https://console.cron-job.org/:
+  URL: https://YOUR-RENDER-SERVICE.onrender.com/health
+  Method: GET
+  Schedule: every 5 minutes (or the shortest interval allowed by your plan)
+  Expected result: HTTP 200 with JSON status "ok"
+
+Replace YOUR-RENDER-SERVICE with the exact hostname shown in your Render dashboard.
+Run the job once manually and confirm a successful HTTP 200 response.
+
+IMPORTANT LIMITATIONS:
+- This is an external health ping, not a guaranteed 24/7 uptime mechanism.
+- Render may still restart, deploy, suspend or spin down a service according to its plan and policies.
+- It cannot prevent crashes, database outages, deployment failures or maintenance.
+- Use a paid always-on hosting plan for a production uptime commitment.
+- Keep /health lightweight; do not add database writes or sensitive information to it.
