@@ -1,0 +1,17 @@
+PHOTO PICKER FIX — 2026-11-01
+
+Changes:
+- Removed the third “Browser Gallery” button and its file input.
+- The only photo source buttons are Camera and Gallery.
+- Gallery input accepts image/* and multiple images; on Android this asks the operating system to show its available photo picker/gallery.
+- The + thumbnail action now opens the same Gallery picker.
+- Removed automatic background removal/cropping from product-photo preparation. Selected photos keep their full frame/aspect ratio.
+- If photo decoding fails, the selected photo is no longer silently removed; an error is shown and the form will not submit a missing image.
+- Existing upload endpoint and product form fields were not changed.
+
+Important Android/browser limitation:
+A website cannot force-launch a particular OEM Gallery app (for example Vivo Gallery) or bypass Android's system picker. The browser's <input type=file accept="image/*"> invokes Android's registered photo picker. Which picker UI appears is controlled by Android/browser/device settings. A guaranteed direct launch of the manufacturer's Gallery app requires a native Android app or a native WebView bridge.
+
+Checks:
+- node --check src/public/js/shop.js: PASS
+- Full node --test suite could not run in this extracted ZIP because required project modules/dependencies are missing (for example test imports ../src/services/shipping-notice-service). No unrelated files were modified.
