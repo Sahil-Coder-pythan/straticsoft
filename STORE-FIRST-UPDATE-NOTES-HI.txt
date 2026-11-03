@@ -1,0 +1,19 @@
+STRATIC MARKET — SHOP-FIRST UPDATE (2026-11-03)
+
+Implemented in this update:
+- Added a persistent multi-shop data collection (shops.json / Postgres KV backup).
+- A seller creates a shop before uploading products.
+- Shop name, company name, description, category, city, phone and address are collected once.
+- A generated monogram identity is created in the browser from the shop/company name; no logo API is used.
+- Marketplace home now loads shop boards, showing shop name, smaller company name, product count and up to five product photos.
+- Shop detail view shows products belonging to that shop; owner can add products from inside the shop.
+- Product upload now requires an owned shop ID and uses the saved shop name automatically.
+- Product description is visible on product cards.
+- Admin-only API endpoints are available to list shops and manually set a shop's verified status.
+- Existing privacy, terms, chat, login, cart, checkout, orders, shipping, account, profile and other app files/features were retained.
+
+Important limitations to finish before production launch:
+- The generated mark is a clean initials-based monogram, not a trademark-faithful Nike-style logo. This is intentional: brand logos must not be fabricated as if officially authorized.
+- Store banner artwork, product star-rating submission/aggregation, and the visual shop-management section in the private admin dashboard still need a dedicated pass.
+- Legacy products without a shopId are no longer shown in the new shop-board home view, but are not physically erased from persistent storage by this code. This avoids silently deleting order-linked records and gives a safe migration point. If you want a permanent data purge, it should be done as a one-time backup-and-confirmed migration on the live database, not by wiping files during every server restart.
+- No live production database was available in this ZIP, so deployment persistence and real account workflows must be tested on a staging deployment before launch.
