@@ -1,0 +1,11 @@
+Chat notifications (new in v8)
+1. Deploy normally. Render runs "npm install", which now installs the "web-push" package.
+2. No keys or accounts needed: the VAPID keys are created automatically and saved in your database.
+   (Optional: set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY in Render to pin your own.)
+3. Open the site on the phone, sign in, wait a few seconds: a gold card asks "Turn on message alerts". Tap "Turn on" and Allow.
+4. Needs https (your Render link is https) and Chrome on Android. On iPhone it works only after "Add to Home Screen" (iOS 16.4+).
+Behaviour
+ - App open and visible: a gold banner drops from the top; the red number does NOT increase.
+ - App closed / phone locked / app in background: a phone notification arrives and the red number counts the messages.
+ - Opening that chat clears the red number; the next messages start again from 1.
+ - Notification has a Reply box: reply without opening the app.
