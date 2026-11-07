@@ -1,7 +1,0 @@
-STRATIC MARKET - AUTOMATIC SHOP LOGO
-
-- Shop cards and shop detail headers now render an original luxury monogram logo from the seller's company/shop name.
-- The create-shop form shows a live logo preview while the seller types.
-- Logo artwork is generated locally in the browser using inline SVG and CSS. No image-generation API, external API, or extra service is required.
-- The generated mark is an original monogram, not an official third-party trademark. For example, entering "Nike" generates a custom N-style luxury monogram; it does not copy or claim to be Nike's official swoosh. A genuine official brand logo must be supplied by an authorized brand owner.
-- The generated logo is deterministic: the same shop/company name produces the same mark on the storefront and shop detail page.
